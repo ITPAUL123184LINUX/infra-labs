@@ -34,15 +34,4 @@ Privilege escalation: sudo (no password)
 [X] ping works 
 [X] sudo (id as root) works
 
-## Labs Index
-- **Lesson 2 – Managed Environment**  
-  - Folder: `ansible/lesson2-managed-env/`  
-  - [Lesson README](ansible/lesson2-managed-env/README.md) — what done looks like  
-  - [Deep Notes](ansible/lesson2-managed-env/docs/lesson2-notes.md) — every command + why  
-  - Quick validate:
-    ```
-    ansible-inventory --graph
-    ansible all -m ping -o
-    ansible all -b -m command -a 'id' -o
-    ```
  
