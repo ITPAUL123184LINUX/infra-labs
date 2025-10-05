@@ -77,11 +77,10 @@ ansible all -b -m command -a 'id' -o
 uid=0(root) gid=0(root) ... which proves passwordless sudo is working
 
 #  Flags cheat sheet (used today)
--i <inv> — inventory path (overrides ansible.cfg)
---graph — tree view of inventory
+-i <inv>    —inventory path (overrides ansible.cfg)
+--graph     -tree view of inventory
 -m <module> — which module to run (e.g., ping, command)
 -a "<args>" — arguments passed to the module (for command or shell)
 -b — become (sudo)
 -o — one line per host
-
 -u <user> — override remote_user (normally not needed here)
