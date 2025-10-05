@@ -1,25 +1,27 @@
 Lesson 2 – Managed Environment (Deep Notes)
+==========================================
 
-Control node: control (I run all Ansible commands here)
-Managed nodes: ansible1, ansible2, ansible3 (reachable via SSH as ansible user with key)
+Control node:
+  - Host: control (all Ansible commands run here)
+
+Managed nodes:
+  - ansible1, ansible2, ansible3
+  - Reachable via SSH as user: ansible (key-based auth)
 
 What I built
+------------
+Inventory file: inventory.ini (describes the managed group)
+Ansible config : ansible.cfg in the same folder, sets:
+  - default inventory path to ./inventory.ini
+  - remote_user = ansible
+  - private_key_file = /home/ansible/.ssh/id_ed25519
+  - become=True with sudo (NOPASSWD in lab)
+  - interpreter_python = /usr/bin/python3
+  - host_key_checking = False (LAB ONLY)
 
-Inventory at inventory.ini describing the managed group.
-
-ansible.cfg in this folder to:
-
-set default inventory to ./inventory.ini
-
-use remote user ansible and key /home/ansible/.ssh/id_ed25519
-
-enable sudo (become=True, become_method=sudo)
-
-use Python 3 interpreter on targets
-
-disable host key checking (lab only)
-
-# inventory.ini
+----------------------------------------------------------------------
+inventory.ini (content)
+----------------------------------------------------------------------
 
 [managed]
 ansible1
@@ -30,98 +32,133 @@ ansible3
 ansible_user=ansible
 ansible_python_interpreter=/usr/bin/python3
 
-- [managed] is a host group I’ll target in commands/playbooks.
+Notes:
+  - "managed" is the host group I target in commands/playbooks.
+  - Group vars under [managed:vars] apply to all hosts in the group.
 
-- Group vars apply to all hosts in managed.
-
-# ansible.cfg
+----------------------------------------------------------------------
+ansible.cfg (content)
+----------------------------------------------------------------------
 
 [defaults]
-inventory = ./inventory.ini          					# default inventory (no -i needed)
-remote_user = ansible                					# SSH user
+inventory = ./inventory.ini
+remote_user = ansible
 private_key_file = /home/ansible/.ssh/id_ed25519
-host_key_checking = False             					# LAB ONLY; set True in prod
-interpreter_python = /usr/bin/python3 # use Python 3 on remotes
+host_key_checking = False               # LAB ONLY; set True in prod
+interpreter_python = /usr/bin/python3   # use Python 3 on remotes
 
 [privilege_escalation]
 become = True
 become_method = sudo
-become_ask_pass = False              					# NOPASSWD sudoers in lab
+become_ask_pass = False                 # NOPASSWD sudoers in lab
 
-
-
+----------------------------------------------------------------------
 Commands I ran (what / why / flags)
-
-- All run on the control node inside ~/infra-labs/ansible/lesson2-managed-env
+All run on the control node inside: ~/infra-labs/ansible/lesson2-managed-env
+----------------------------------------------------------------------
 
 1) Visualize inventory
-ansible-inventory -i inventory.ini --graph
 
--i: use this inventory file (optional if ansible.cfg already points to it)
---graph: prints groups/hosts tree; sanity check that Ansible sees all hosts
+   CMD> ansible-inventory -i inventory.ini --graph
 
+   Why: sanity check that Ansible sees all hosts/groups.
+   Flags:
+     -i path    : use this inventory file (optional if ansible.cfg points here)
+     --graph    : tree view of inventory
 
--Expected (example)
+   Expected example:
+     @all:
+       |--@ungrouped:
+       |--@managed:
+       |  |--ansible1
+       |  |--ansible2
+       |  |--ansible3
 
-@all:
-  |--@managed:
-  |  |--ansible1
-  |  |--ansible2
-  |  |--ansible3
+2) Confirm which config file Ansible is using
 
+   CMD> ansible --version | sed -n '1p;/config file/ p'
 
-2) Confirm which config Ansible is using
-ansible --version | sed -n '1p;/config file/ p'
+   Why: shows Ansible version and the active config file path.
+        It should point to this folder’s ansible.cfg.
 
-- Shows Ansible version and the active config file path (should be this folder’s ansible.cfg)
+3) Dump effective settings (filtered to key defaults)
 
+   CMD> ansible-config dump | egrep 'DEFAULT_INVENTORY|DEFAULT_REMOTE_USER|DEFAULT_PRIVATE_KEY_FILE|HOST_KEY_CHECKING|DEFAULT_INTERPRETER_PYTHON|BECOME'
 
-3) Dump effective settings (filtered)
-ansible-config dump | egrep 'DEFAULT_INVENTORY|DEFAULT_REMOTE_USER|DEFAULT_PRIVATE_KEY_FILE|HOST_KEY_CHECKING|DEFAULT_INTERPRETER_PYTHON|BECOME'
-- Proves our key defaults are applied (inventory, remote_user, key, interpreter, become)
-
+   Why: proves our defaults are applied (inventory, remote_user, key,
+        host key checking, python interpreter, become).
 
 4) Prove SSH/key works out-of-band (one host)
-ssh -i /home/ansible/.ssh/id_ed25519 ansible@ansible1 'hostname; id'
 
-- If this fails, Ansible will fail. Fix SSH before proceeding. 
+   CMD> ssh -i /home/ansible/.ssh/id_ed25519 ansible@ansible1 'hostname; id'
 
+   Why: if this fails, Ansible will fail. Fix SSH before proceeding.
 
-5) ICMP test to all (module = ping)
-ansible all -m ping -o
+5) "Ping" all hosts using Ansible’s ping module
 
- all: the implicit group of all hosts
+   CMD> ansible all -m ping -o
 
- -m ping: runs Ansible’s ping module (checks Python/SSH, not ICMP)
+   Notes:
+     - "all" is the implicit group containing all hosts.
+     - The ping module checks Python/SSH (not ICMP).
+     - -o prints one line per host.
 
- -o: one-line output per host
- 
- Expected: ansible1 | SUCCESS => {"changed": false, "ping": "pong"}
+   Expected success line example:
+     ansible1 | SUCCESS => {"changed": false, "ping": "pong"}
 
+6) Verify privilege escalation (become/sudo) works
 
-6) Verify privilege escalation (become/sudo)
-ansible all -b -m command -a 'id' -o
+   CMD> ansible all -b -m command -a 'id' -o
 
--b: become (sudo as root)
+   Why: proves passwordless sudo.
+   Expected output includes:
+     uid=0(root) gid=0(root) groups=0(root)
 
--m command + -a 'id': run the id command
+----------------------------------------------------------------------
+Flags cheat sheet used today
+----------------------------------------------------------------------
 
-Expected: uid=0(root) gid=0(root) ... which proves passwordless sudo is working
+-i <path>           : inventory file path (overrides ansible.cfg)
+--graph             : inventory tree view
+-m <module>         : which module to run (e.g., ping, command, shell)
+-a "<args>"         : arguments passed to the module
+-b                  : become (sudo)
+-o                  : one-line output per host
+-u <user>           : override remote_user (normally not needed here)
 
+----------------------------------------------------------------------
+Troubleshooting notes
+----------------------------------------------------------------------
 
+A) "Permission denied (publickey, gssapi-keyex, gssapi-with-mic, password)"
+   - Ensure the control node can SSH with the same key:
+       ssh -i /home/ansible/.ssh/id_ed25519 ansible@ansible1
+   - Check file perms:
+       chmod 700 /home/ansible/.ssh
+       chmod 600 /home/ansible/.ssh/id_ed25519
+       chown -R ansible:ansible /home/ansible/.ssh
+   - If using different usernames per host, set ansible_user in inventory.
 
-Flags cheat sheet (used today)
+B) "Failed to find interpreter" or Python errors
+   - Install Python 3 on remotes or set ansible_python_interpreter
+     (we set it via group vars in inventory.ini).
 
--i <inv> — inventory path (overrides ansible.cfg)
+C) "sudo: a password is required"
+   - In lab, ensure NOPASSWD for user "ansible" in sudoers, or use become_ask_pass.
 
---graph — tree view of inventory
+D) Host key checking failures in lab
+   - We disable in ansible.cfg (host_key_checking=False). In prod, leave it True.
 
--m <module> — which module to run (e.g., ping, command)
+E) Ansible can reach only localhost
+   - Ensure ansible.cfg "inventory" points at ./inventory.ini OR use -i explicitly.
+   - Confirm DNS or /etc/hosts entries resolve ansible1/2/3 from control.
 
--a "<args>" — arguments passed to the module (for command or shell)
+F) GSSAPI delays or odd SSH auth negotiation
+   - You can test with:
+       ssh -o PreferredAuthentications=publickey -i /home/ansible/.ssh/id_ed25519 ansible@ansible1
+   - Or set SSH options in ansible.cfg via "ssh_args" if needed.
 
--b — become (sudo)
+----------------------------------------------------------------------
+End of Lesson 2 notes (plain text)
+----------------------------------------------------------------------
 
--o — one line per host
-
--u <user> — override remote_user (normally not needed here)
