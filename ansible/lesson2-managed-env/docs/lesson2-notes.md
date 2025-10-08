@@ -26,7 +26,7 @@
 
 
 <p align="center">
-<img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson2-managed-env/docs/img/Capture.PNG" alt="Inventory File">
+<img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson2-managed-env/docs/img/iventory.ini.ss.PNG">
 </p>
 
 <h2>ansible.cfg</h2>
@@ -47,41 +47,66 @@
    - <b>become_method = sudo          :   Explicitly uses sudo (standard on RHEL9); consistent with NOPASSWD lab config.</b>
 
    - <b>become_ask_pass = False          :   No password prompt during privilege escalation; required for unattended runs.</b>
+   
+   - <b>- collections_path = ./collections:~/.ansible/collections:/usr/share/ansible/collections : Specifies where Ansible should search for collections. Think of a collection as a package of reusable automation content — it can include roles, modules, plugins, and documentation. Paths are checked in order: project-level, then user-level, then system-wide.</b>
+.</b>
 <br />
 <br />
 <p align="center">
-<img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson2-managed-env/docs/img/Capture.ansible.cfg.PNG" alt="Ansible.cfg">
+<img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson2-managed-env/docs/img/ansible.cfg.ss.PNG">
 <br />
 <br />
 
  ### Commands I ran
  <p align="center">
-<img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson2-managed-env/docs/img/Ansible_CMDS_L2.PNG">
+<img src="https://raw.githubusercontent.com/ITPAUL123184LINUX/infra-labs/main/ansible/lesson2-managed-env/docs/img/Ansible_CMDS_L2.PNG" style="width:100%; max-width:1200px;" />
+  
+		
+	ansible-inventory -i inventory.ini --graph
 
-   - <b>ansible-inventory -i inventory.ini --graph          :   Displays the group hierarchy from the static inventory file, confirming host grouping @managed → ansible1–3.</b>
+	
+- <b>Displays the group hierarchy from the static inventory file, confirming host grouping @managed → ansible1–3.</b>
 
-   - <b>ansible --version | sed -n '1p;/config file/ p          :   Prints Ansible version and the active config file path to verify you’re using the intended `ansible.cfg.</b>
-
-<br />
-<br />
-Wait for process to complete (may take some time):  <br/>
-<img src="https://i.imgur.com/JL945Ga.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Sanitization complete:  <br/>
-<img src="https://i.imgur.com/K71yaM2.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Observe the wiped disk:  <br/>
-<img src="https://i.imgur.com/AeZkvFQ.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-</p>
-
-<!--
- ```diff
-- text in red
-+ text in green
-! text in orange
-# text in gray
-@@ text in purple (and bold)@@
+```bash
+ansible --version | sed -n '1p;/config file/ p'
 ```
---!>
+  - <b>Prints Ansible version and the active config file path to verify you’re using the intended `ansible.cfg.</b>
+  ```bash
+  ansible-config dump | egrep 'DEFAULT_INVENTORY|DEFAULT_REMOTE_USER|DEFAULT_PRIVATE_KEY_FILE|HOST_KEY_CHECKING|DEFAULT_INTERPRETER_PYTHON|BECOME'.
+  ```
+  - <b>This CMD proves our defaults are applied (inventory, remote_user, key, host key checking, python interpreter, become).</b>
+  ```bash
+  ssh -i /home/ansible/.ssh/id_ed25519 ansible@ansible1 'hostname; id'
+  ```
+  - <b>SSH connection was failing, I tested it manually to confirm the key and user work outside of Ansible. Ran `hostname` and `id` on ansible1.</b>
+		
+```bash
+ansible all -m ping -o
+```
+- <b>Ping all managed hosts in inventory using Ansibles ping module. -o prints everything on one line.</b>
+
+- <b> -o prints the output on one line per host.</b>
+
+```bash
+ansible all -b -m command -a 'id' -o
+```
+
+- <b>Verifies passwordless `sudo` (`become`) works across all hosts.</b>
+		
+---
+
+## 🧠 Flags Cheat Sheet (Lesson 2)
+
+| Flag         | Description                                             |
+|--------------|---------------------------------------------------------|
+| `-i <path>`  | Inventory file path (overrides `ansible.cfg`)           |
+| `--graph`    | Inventory tree view                                     |
+| `-m <module>`| Which module to run (e.g., ping, command, shell)        |
+| `-a <args>`  | Arguments passed to the module                          |
+| `-b`         | Become (sudo)                                           |
+| `-o`         | One-line output per host                                |
+| `-u <user>`  | Override `remote_user` (normally not needed here)       |
+
+---
+
+_End of Lesson 2 notes_
