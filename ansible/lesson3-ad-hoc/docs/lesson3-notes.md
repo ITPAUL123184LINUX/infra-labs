@@ -6,11 +6,13 @@
 </ul>
 
 <h3>Managed nodes</h3>
-<p><b>ansible1, ansible2, ansible3</b> – reachable via SSH as user <b>ansible</b> (key-based auth)</p>
+<ul>
+  <li><b>Hosts:</b> <code>ansible1</code>, <code>ansible2</code>, <code>ansible3</code> – reachable via SSH as user <b>ansible</b> (key-based auth)</li>
+</ul>
 
 <h2>What I built / validated</h2>
 <ul>
-  <li><b>Collections in use:</b> <code>ansible.posix</code>, <code>community.general</code></li>
+  <li><b>Collections in use:</b> <code>ansible.posix</code>, <code>community.general</code>, <code>community.mysql</code></li>
   <li><b>FQCN usage verified:</b> <code>community.general.timezone</code> (good replacement to show real collection usage)</li>
   <li><b>Idempotent resources on each host:</b>
     <ul>
@@ -29,59 +31,92 @@
 
 <hr/>
 
-<h2>Collections: install & search path</h2>
+<h2>Collections: Install & Search Path</h2>
 
-<p><b>Preferred:</b> use a project-local <code>requirements.yml</code> and a project-local collections path so
-both the CLI and ansible-navigator find the same content.</p>
+<p><b>Preferred:</b> Using a project-local <code>requirements.yml</code> and local collections path keeps both the Ansible CLI and <code>ansible-navigator</code> aligned.</p>
 
-<p
 <p align="center">
-  <!-- Screenshot: repo overview -->
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/requirements.yml.PNG" />
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/requirements.yml.current%20.PNG" alt="requirements.yml contents"/>
 </p>
 
 <p>
-The <code>requirements.yml</code> file defines which Ansible collections my project depends on.  
-Each collection — such as <code>ansible.posix</code> (for system-level tasks) and <code>community.general</code> (for extra community modules) — extends Ansible’s core functionality.  
-Storing these dependencies in a single YAML file ensures anyone cloning my repository can reproduce the same environment I have with one command:  
-<code>ansible-galaxy collection install -r requirements.yml</code>.
+The <code>requirements.yml</code> file defines which Ansible collections my project depends on.<br>
+For example:
+<ul>
+  <li><code>ansible.posix</code> – Core Linux system modules</li>
+  <li><code>community.general</code> – Broad community-supported modules</li>
+  <li><code>community.mysql</code> – MySQL and MariaDB management</li>
+</ul>
+
+Maintaining dependencies in this single YAML file lets anyone who clones my repo reproduce the same environment with one command:
 </p>
 
-<pre><code># Install into a project-local ./collections path (works well with navigator)
-ansible-galaxy collection install -r requirements.yml -p collections
-</code></pre>
+<pre><code>ansible-galaxy collection install -r requirements.yml -p collections</code></pre>
 
-<p>If needed, point Ansible to your project collections:</p>
+<p align="center">
+  <!-- Screenshot: repo overview -->
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/ansible-galaxy%20collection%20install%20-r%20requirements.yml%20-p%20collections.PNG" />
+</p>
 
-<pre><code># In ansible.cfg for this lesson (or top-level), add:
-[defaults]
-collections_paths = ./collections:~/.ansible/collections:/usr/share/ansible/collections
-</code></pre>
+<h3>Command Breakdown</h3>
+<ul>
+  <li><code>ansible-galaxy</code> → Ansible’s package manager for roles and collections.</li>
+  <li><code>collection install</code> → Installs all collections listed in the file.</li>
+  <li><code>-r requirements.yml</code> → Reads the collection list from this YAML file.</li>
+  <li><code>-p collections</code> → Installs them locally into a <code>collections/</code> folder, isolating dependencies per project.</li>
+</ul>
+
+<h3>Summary</h3>
+<p>
+This command installs all required collections for my project.<br>
+<b>Why:</b> Ensures every module my playbooks need at the moment is available locally.<br>
+<b>Result:</b> My setup is self-contained, portable, and ready to run anywhere.
+</p>
+
+<p><b>Set the collection path in ansible.cfg if needed:</b></p>
+
+``` bash
+collections_path = ./collections:~/.ansible/collections:/usr/share/ansible/collections
+```
 
 <p align="center">
   <!-- Optional screenshot: galaxy install -->
-  <img src="./img/lesson3-galaxy-install-ss.png" alt="ansible-galaxy collection install output" />
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/collections_path.PNG" />
 </p>
 
 <hr/>
 
 <h2>1) Prove FQCN resolution with a real community module</h2>
 
-<pre><code>ansible all -b -m community.general.timezone -a 'name=UTC' --check -o
+<pre><code>ansible all -b -m community.general.timezone -a 'name=EST' --check -o
 </code></pre>
 
 <ul>
-  <li><b>Why:</b> Validates <i>collection</i> discovery + <i>sudo</i> without changing state.</li>
-  <li><b>Options:</b> <code>-b</code> sudo, <code>-m</code> module, <code>-a</code> args, <code>--check</code> dry-run, <code>-o</code> one-line</li>
-  <li><b>Acceptance:</b> each host shows <code>CHANGED</code> in check mode.</li>
+  <li><b>Why:</b> Confirms that <b>community.general</b> collections are installed and discoverable by Ansible. This test uses <code>--check</code> to verify <i>FQCN</i> (Fully Qualified Collection Name) resolution without changing system state.</li>
+
+  <li><b>What it does:</b> Runs a dry-run ad hoc command on <b>all managed nodes</b>, testing if the <code>community.general.timezone</code> module can set <code>EST</code> timezone. Each host returning <code>CHANGED</code> proves the module was found and would modify the timezone if applied for real.</li>
+
+  <li><b>Options used:</b>
+    <ul>
+      <li><code>-b</code> → Run with elevated privileges (become/sudo).</li>
+      <li><code>-m</code> → Specify which module to use (<code>community.general.timezone</code>).</li>
+      <li><code>-a</code> → Provide arguments to the module (<code>name=EST</code>).</li>
+      <li><code>--check</code> → Run in dry-run mode (no real changes).</li>
+      <li><code>-o</code> → Display output in a single line per host (cleaner for screenshots/logs).</li>
+    </ul>
+  </li>
+
+  <li><b>Acceptance:</b> Each node displays <code>CHANGED</code> in check mode, confirming successful FQCN resolution.</li>
 </ul>
 
 <p align="center">
-  <!-- Screenshot: timezone check -->
-  <img src="./img/lesson3-fqcn-ss.png" alt="FQCN check-mode proof" />
+  <!-- Screenshot: timezone check proof -->
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/lesson3-fqcn.PNG" alt="FQCN check-mode proof (EST)" />
 </p>
 
 <hr/>
+
+
 
 <h2>2) Create directories idempotently</h2>
 
