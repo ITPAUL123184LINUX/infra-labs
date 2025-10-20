@@ -1,5 +1,7 @@
 <h1>Lesson 3 – Ad Hoc Commands (Deep Notes)</h1>
 
+<p><b>Goal:</b> Build, validate, and document ad hoc Ansible commands that prove collection usage, FQCN resolution, and idempotent task behavior across managed nodes.</p>
+
 <h3>Control node</h3>
 <ul>
   <li><b>Host:</b> <code>control</code> (all Ansible commands run here)</li>
@@ -63,16 +65,15 @@ Maintaining dependencies in this single YAML file lets anyone who clones my repo
   <li><code>ansible-galaxy</code> → Ansible’s package manager for roles and collections.</li>
   <li><code>collection install</code> → Installs all collections listed in the file.</li>
   <li><code>-r requirements.yml</code> → Reads the collection list from this YAML file.</li>
-  <li><code>-p collections</code> → Installs them locally into a <code>collections/</code> folder, isolating dependencies per project.</li>
+  <li><code>-p collections</code> → Installs them locally into a <code>collections/</code> folder, keeping dependencies isolated per project.</li>
 </ul>
 
 <h3>Summary</h3>
 <p>
-This command installs all required collections for my project.<br>
-<b>Why:</b> Ensures every module my playbooks need at the moment is available locally.<br>
-<b>Result:</b> My setup is self-contained, portable, and ready to run anywhere.
+This command installs every collection defined in <code>requirements.yml</code>.<br>
+<b>Why I ran it:</b> To ensure all required modules are present and available locally for consistent playbook execution.<br>
+<b>Result:</b> A self-contained, portable environment that can be cloned and executed anywhere with identical behavior.
 </p>
-
 <p><b>Set the collection path in ansible.cfg if needed:</b></p>
 
 ``` bash
@@ -120,57 +121,112 @@ collections_path = ./collections:~/.ansible/collections:/usr/share/ansible/colle
 
 <h2>2) Create directories idempotently</h2>
 
-<pre><code># First run (should change)
-ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3 state=directory mode=0755 owner=root group=root' -o
-ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3/logs state=directory mode=0755 owner=root group=root' -o
-
+```
+# First run (should change)
+ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3a state=directory mode=0755 owner=root group=root' -o
+ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3a/logs state=directory mode=0755 owner=root group=root' -o
+```
+```
 # Re-run (should be ok / no change)
-ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3 state=directory mode=0755 owner=root group=root' -o
-ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3/logs state=directory mode=0755 owner=root group=root' -o
-
+ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3a state=directory mode=0755 owner=root group=root' -o
+ansible all -b -m ansible.builtin.file -a 'path=/opt/lesson3a/logs state=directory mode=0755 owner=root group=root' -o
+```
+```
 # Verify
-ansible all -m ansible.builtin.stat -a 'path=/opt/lesson3' -o
-ansible all -m ansible.builtin.stat -a 'path=/opt/lesson3/logs' -o
-</code></pre>
-
-<ul>
-  <li><b>Key args:</b> <code>state=directory</code>, <code>mode=0755</code>, <code>owner/group=root</code>.</li>
-  <li><b>Acceptance:</b> First run <i>changed=true</i>; second run <i>changed=false</i>; <code>stat</code> shows <code>isdir:true</code>, mode 0755.</li>
-</ul>
+ansible all -m ansible.builtin.stat -a 'path=/opt/lesson3a' -o
+ansible all -m ansible.builtin.stat -a 'path=/opt/lesson3a/logs' -o
+```
 
 <p align="center">
-  <!-- Screenshot: dirs + stat -->
-  <img src="./img/lesson3-dirs-ss.png" alt="Idempotent directory management" />
+  <!-- Screenshot: idempotent directory proof -->
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/lesson3-dirs-idempotent.PNG" alt="Idempotent directory management proof" />
 </p>
+<ul>
+  <li><b>Why:</b> I ran this command a second time to demonstrate <i>idempotency</i> — the concept that Ansible only applies changes when something is different.  
+  The directories were created on the first run, so the second run should detect no changes and simply report <code>ok</code>.</li>
 
-<hr/>
+  <li><b>What it does:</b> Creates two directories (<code>/opt/lesson3a</code> and <code>/opt/lesson3a/logs</code>) with the correct permissions and ownership, 
+  then verifies they already exist and match the expected state.</li>
+
+  <li><b>Command breakdown:</b>
+    <ul>
+      <li><code>-b</code> → Run with sudo privileges (become root).</li>
+      <li><code>-m ansible.builtin.file</code> → Uses Ansible’s built-in <b>file module</b>, which manages files, directories, and symlinks on the target system.</li>
+      <li><code>-a</code> → Passes arguments: 
+        <code>path</code> (location), 
+        <code>state=directory</code> (ensures it’s a directory), 
+        <code>mode=0755</code> (permissions), 
+        <code>owner/group=root</code> (ownership).</li>
+      <li><code>-o</code> → Shows one-line output per host for easier reading.</li>
+    </ul>
+  </li>
+
+  <li><b>Acceptance:</b>
+    <ul>
+      <li>First run → <code>CHANGED</code> (directories created)</li>
+      <li>Second run → <code>ok</code> (no changes — idempotent behavior proven)</li>
+      <li><code>stat</code> confirms <code>isdir:true</code>, mode <code>0755</code>, owned by <code>root</code>.</li>
+    </ul>
+  </li>
+</ul>
 
 <h2>3) Manage a file & verify content via hash</h2>
 
-<pre><code># Enforce exact file content + perms
-ansible all -b -m ansible.builtin.copy -a 'dest=/opt/lesson3/info.txt content="Lesson 3 — FQCN + idempotency
-Managed by Ansible
-" owner=root group=root mode=0644' -o
-
-# Re-run to prove idempotency
-ansible all -b -m ansible.builtin.copy -a 'dest=/opt/lesson3/info.txt content="Lesson 3 — FQCN + idempotency
-Managed by Ansible
-" owner=root group=root mode=0644' -o
-
-# Verify content is identical on all hosts
-ansible all -m ansible.builtin.command -a 'sha256sum /opt/lesson3/info.txt' -o
-ansible all -m ansible.builtin.command -a 'cat /opt/lesson3/info.txt' -o
-</code></pre>
-
-<ul>
-  <li><b>Why:</b> <code>copy</code> is idempotent and byte-accurate—perfect for exam proof.</li>
-  <li><b>Acceptance:</b> Second run <i>changed=false</i>; identical SHA256; content matches exactly.</li>
-</ul>
+```
+# Step 1 — Enforce exact file content + permissions
+ansible all -b -m ansible.builtin.copy -a 'dest=/opt/lesson3/info_v2.txt content="Lesson3 FQCN + idempotency (hash demo)" owner=root group=root mode=0644' -o
+```
+```
+# Verify file integrity via SHA256 hash
+ansible all -m ansible.builtin.command -a 'sha256sum /opt/lesson3/info_v2.txt' -o
+```
+```
+# View file content on each host
+ansible all -m ansible.builtin.command -a 'cat /opt/lesson3/info_v2.txt' -o
+```
+```
+# Step 2 — Re-run to prove idempotency (no changes expected)
+ansible all -b -m ansible.builtin.copy -a 'dest=/opt/lesson3/info_v2.txt content="Lesson3 FQCN + idempotency (hash demo)" owner=root group=root mode=0644' -o
+```
+```
+# Verify hash remains unchanged (confirming idempotency)
+ansible all -m ansible.builtin.command -a 'sha256sum /opt/lesson3/info_v2.txt' -o
+```
 
 <p align="center">
-  <!-- Screenshot: copy + sha256 -->
-  <img src="./img/lesson3-copy-ss.png" alt="copy module idempotency + hash verification" />
+  <!-- Screenshot: copy + sha256 verification -->
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson3-ad-hoc/docs/img/lesson3-copy-hash.PNG" alt="copy module idempotency + hash verification" />
 </p>
+
+<ul>
+  <li><b>Why:</b> Demonstrates <i>idempotency</i> with the <code>copy</code> module — showing that identical content and permissions produce no changes when re-run. Also validates file consistency via SHA256 hash.</li>
+
+  <li><b>What it does:</b>
+    <ul>
+      <li>Creates <code>/opt/lesson3/info_v2.txt</code> with defined content, permissions, and ownership.</li>
+      <li>Computes SHA256 checksum across all hosts to verify identical content.</li>
+      <li>Re-runs to confirm no changes — proving idempotent behavior.</li>
+    </ul>
+  </li>
+
+  <li><b>Command breakdown:</b>
+    <ul>
+      <li><code>-b</code> → Runs with sudo privileges (become root).</li>
+      <li><code>-m ansible.builtin.copy</code> → Uses Ansible’s <b>copy module</b> to create or enforce file content and permissions.</li>
+      <li><code>-a</code> → Passes module arguments (<code>dest</code>, <code>content</code>, <code>owner/group</code>, <code>mode</code>).</li>
+      <li><code>ansible.builtin.command</code> → Runs verification commands (<code>sha256sum</code> and <code>cat</code>) across managed nodes.</li>
+      <li><code>-o</code> → Displays compact one-line output per host (clean and exam-friendly).</li>
+    </ul>
+  </li>
+
+  <li><b>Acceptance:</b>
+    <ul>
+      <li>First run → <code>CHANGED</code> (file created and hashes identical across all nodes).</li>
+      <li>Second run → <code>ok</code> (no change — idempotent behavior confirmed).</li>
+      <li><code>sha256sum</code> identical on all hosts; <code>cat</code> output matches expected content.</li>
+    </ul>
+  </li>
+</ul>
 
 <hr/>
 
