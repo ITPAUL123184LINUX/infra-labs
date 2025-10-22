@@ -1,0 +1,27 @@
+TASK [Gathering Facts] *********************************************************
+TASK [Ensure groups exist] *****************************************************
+TASK [Ensure users exist] ******************************************************
+TASK [Verify users exist] ******************************************************
+changed: [ansible2] => (item={'name': 'devops', 'groups': 'wheel', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "devops"], "delta": "0:00:00.004589", "end": "2025-10-22 19:02:26.513866", "item": {"groups": "wheel", "name": "devops", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:26.509277", "stderr": "", "stderr_lines": [], "stdout": "devops:x:1003:1003::/home/devops:/bin/bash", "stdout_lines": ["devops:x:1003:1003::/home/devops:/bin/bash"]}
+changed: [ansible1] => (item={'name': 'devops', 'groups': 'wheel', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "devops"], "delta": "0:00:00.005540", "end": "2025-10-22 19:02:26.521865", "item": {"groups": "wheel", "name": "devops", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:26.516325", "stderr": "", "stderr_lines": [], "stdout": "devops:x:1005:1005::/home/devops:/bin/bash", "stdout_lines": ["devops:x:1005:1005::/home/devops:/bin/bash"]}
+changed: [ansible3] => (item={'name': 'devops', 'groups': 'wheel', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "devops"], "delta": "0:00:00.005857", "end": "2025-10-22 19:02:26.540445", "item": {"groups": "wheel", "name": "devops", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:26.534588", "stderr": "", "stderr_lines": [], "stdout": "devops:x:1003:1003::/home/devops:/bin/bash", "stdout_lines": ["devops:x:1003:1003::/home/devops:/bin/bash"]}
+changed: [ansible3] => (item={'name': 'webadmin', 'groups': 'apache', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "webadmin"], "delta": "0:00:00.004196", "end": "2025-10-22 19:02:27.285138", "item": {"groups": "apache", "name": "webadmin", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:27.280942", "stderr": "", "stderr_lines": [], "stdout": "webadmin:x:1006:1007::/home/webadmin:/bin/bash", "stdout_lines": ["webadmin:x:1006:1007::/home/webadmin:/bin/bash"]}
+changed: [ansible1] => (item={'name': 'webadmin', 'groups': 'apache', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "webadmin"], "delta": "0:00:00.004346", "end": "2025-10-22 19:02:27.294919", "item": {"groups": "apache", "name": "webadmin", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:27.290573", "stderr": "", "stderr_lines": [], "stdout": "webadmin:x:1008:1008::/home/webadmin:/bin/bash", "stdout_lines": ["webadmin:x:1008:1008::/home/webadmin:/bin/bash"]}
+changed: [ansible2] => (item={'name': 'webadmin', 'groups': 'apache', 'shell': '/bin/bash'}) => {"ansible_loop_var": "item", "changed": true, "cmd": ["getent", "passwd", "webadmin"], "delta": "0:00:00.005833", "end": "2025-10-22 19:02:27.311859", "item": {"groups": "apache", "name": "webadmin", "shell": "/bin/bash"}, "msg": "", "rc": 0, "start": "2025-10-22 19:02:27.306026", "stderr": "", "stderr_lines": [], "stdout": "webadmin:x:1006:1006::/home/webadmin:/bin/bash", "stdout_lines": ["webadmin:x:1006:1006::/home/webadmin:/bin/bash"]}
+TASK [Display verification results] ********************************************
+            "stdout": "devops:x:1005:1005::/home/devops:/bin/bash",
+            "stdout_lines": [
+            "stdout": "webadmin:x:1008:1008::/home/webadmin:/bin/bash",
+            "stdout_lines": [
+            "stdout": "devops:x:1003:1003::/home/devops:/bin/bash",
+            "stdout_lines": [
+            "stdout": "webadmin:x:1006:1006::/home/webadmin:/bin/bash",
+            "stdout_lines": [
+            "stdout": "devops:x:1003:1003::/home/devops:/bin/bash",
+            "stdout_lines": [
+            "stdout": "webadmin:x:1006:1007::/home/webadmin:/bin/bash",
+            "stdout_lines": [
+PLAY RECAP *********************************************************************
+ansible1                   : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+ansible2                   : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+ansible3                   : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
