@@ -1,0 +1,32 @@
+---
+
+  - name: Lesson4 Project2 - Manage sshd and firewalld services 
+    hosts: all
+    become: true 
+    gather_facts: false
+
+    tasks:
+      - name: Ensure sshd is started and enabled
+        ansible.builtin.service:
+          name: sshd 
+          state: started 
+          enabled: true  
+
+
+      - name: Ensure firewalld is started and enabled 
+        ansible.builtin.service: 
+          name: firewalld 
+          state: started 
+          enabled: true
+
+
+      - name: Verify sshd and firewalld status 
+        ansible.builtin.command: systemctl is-active {{ item }}
+        loop: 
+          - sshd: 
+          - firewalld: 
+        register: service_status 
+
+      - name: Display verification results 
+        ansible.builtin.debug: 
+          vars: service_status.results  

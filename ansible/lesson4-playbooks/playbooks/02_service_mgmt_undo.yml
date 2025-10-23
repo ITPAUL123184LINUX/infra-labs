@@ -1,0 +1,28 @@
+---
+
+  - name: Lesson 4 project 2 - Undo service management 
+    hosts: managed 
+    become: true 
+    gather_facts: false
+
+    tasks: 
+      - name: Stop and disable sshd 
+        ansible.builtin.service: 
+          name: sshd
+          state: stopped 
+          enabled: false 
+
+      - name: Stop and disable firewalld 
+        ansible.builtin.service: 
+          name: firewalld 
+          state: stopped 
+          enabled: false 
+
+      - name: Verify services are stopped 
+        ansible.builtin.command: systemctl is-active {{ item }}
+        register: service_status 
+        failed_when: service_status.rc == 0
+        loop: 
+          - sshd: 
+          - firewalld:
+        when: item != "sshd"  
