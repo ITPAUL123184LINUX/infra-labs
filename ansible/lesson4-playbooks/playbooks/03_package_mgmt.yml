@@ -1,0 +1,30 @@
+---
+
+  - name: Lesson 4 project 3 - Package Management 
+    hosts: managed 
+    become: true 
+    gather_facts:
+
+    tasks: 
+      - name: Ensure nmap is installed 
+        ansible.builtin.package: 
+          name: nmap 
+          state: present 
+
+      - name: Verify nmap version 
+        ansible.builtin.command: nmap -V
+        register: nmap_check 
+
+      - name: Display nmap version info 
+        ansible.builtin.debug: 
+          var: nmap_check.stdout
+
+      - name: Re-run package task to verify idempotency 
+        dnf: 
+          name: nmap 
+          state: present
+        register: idempotent_check 
+
+      - name: Display idempotency results 
+        ansible.builtin.debug: 
+          var: idempotency_check 

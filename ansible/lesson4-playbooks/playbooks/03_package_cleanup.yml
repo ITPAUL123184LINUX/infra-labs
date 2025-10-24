@@ -1,0 +1,22 @@
+---
+
+  - name: Lesson 4 project 3 - Package Cleanup 
+    hosts: managed
+    become: true 
+    gather_facts: true 
+
+    tasks: 
+      - name: Ensure nmap is removed
+        ansible.builtin.dnf: 
+          name: nmap 
+          state: absent
+
+      - name: Verify nmap removal
+        ansible.builtin.command: rpm -q nmap 
+        register: nmap_check
+        ignore_errors: true
+        changed_when: false 
+
+      - name: Display verification results 
+        ansible.builtin.debug:   
+          var: nmap_check    
