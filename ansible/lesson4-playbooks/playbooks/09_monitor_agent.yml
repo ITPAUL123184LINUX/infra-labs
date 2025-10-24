@@ -1,0 +1,99 @@
+---
+
+  - name: Lesson 4 project 9 - Node exporter Installation and Configuration 
+    hosts: all 
+    become: true 
+    gather_facts: true
+
+    tasks: 
+        - name: Create node_exporter directory
+          ansible.builtin.file: 
+            path: /opt/node_exporter 
+            state: directory 
+            mode: '0755'
+
+        - name: Download node_exporter binary  
+          ansible.builtin.get_url:
+            url: "https://github.com/prometheus/node_exporter/releases/download/v1.8.1/node_exporter-1.8.1.linux-amd64.tar.gz" 
+            dest: /opt/node_exporter/node_exporter.tar.gz 
+            mode: '0644' 
+
+        - name: Extract node_exporter archive 
+          ansible.builtin.unarchive: 
+            src: /opt/node_exporter/node_exporter.tar.gz 
+            dest: /opt/node_exporter 
+            remote_src: true 
+        
+        - name: Move binary to /usr/local/bin
+          ansible.builtin.command: 
+            cmd: mv /opt/node_exporter/node_exporter-1.8.1.linux-amd64/node_exporter /usr/local/bin/
+          args: 
+            creates: /usr/local/bin/node_exporter
+
+        - name: Set executable permissions
+          ansible.builtin.file:
+            path: /usr/local/bin/node_exporter 
+            mode: '0755' 
+
+        - name: Create node_exporter system user 
+          ansible.builtin.user: 
+            name: nodeusr 
+            system: true 
+            shell: /sbin/nologin 
+            create_home: false 
+
+        - name: Create systemd unit file for node_exporter 
+          ansible.builtin.copy: 
+            dest: /etc/systemd/system/node_exporter.service 
+            content: | 
+              [Unit]
+              Description=Node Exporter
+              After=network.target
+
+              [Service]
+              User=nodeusr
+              ExecStart=/usr/local/bin/node_exporter
+              Restart=always
+
+              [Install]
+              WantedBy=multi-user.target
+            mode: '0644'
+
+        - name: Reload systemd to register node_exporter service 
+          ansible.builtin.systemd: 
+            daemon_reload: true 
+
+        - name: Enable and start node_exporter service 
+          ansible.builtin.systemd: 
+            name: node_exporter 
+            enabled: true 
+            state: started 
+
+        - name: Verify node_exporter status 
+          ansible.builtin.shell: systemctl is-active node_exporter
+          register: node_status 
+          changed_when: false 
+
+        - name: Display service status 
+          ansible.builtin.debug: 
+            var: node_status.stdout
+
+        - name: Verify node_exporter service status 
+          ansible.builtin.systemd: 
+            name: node_exporter 
+          register: service_status 
+
+        - name: Display node_exporter systemd status 
+          ansible.builtin.debug: 
+            var: service_status.status.ActiveState
+
+        - name: Verify node_exporter is listeniing on port 9100
+          ansible.builtin.shell: ss -tuln | grep 9100
+          register: port_check 
+          changed_when: false 
+          failed_when: port_check.rc !=0
+
+        - name: Display node_exporter port verification
+          ansible.builtin.debug: 
+            var: port_check.stdout
+
