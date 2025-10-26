@@ -1,0 +1,35 @@
+---
+- name: Lesson 4 project 4 - Dynamic MOTD Banner Deployment
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: DG MOTD
+      ansible.builtin.copy:
+        dest: /etc/motd.d/99-banner
+        mode: '0644'
+        content: |
+          ################################################################
+          # Host: {{ inventory_hostname }}
+          # Kernel: {{ ansible_kernel }}
+          # Uptime: {{ ansible_uptime_seconds | int // 3600 }} hours
+          # Date: {{ ansible_date_time.date }}
+          ################################################################
+          #  SHOW UP EVERY DAMN DAY!
+          #  FIND YOUR NEW 100%
+          #  WHAT AM I CAPEABLE OF?
+          #  DO THE SH*T NO ONE ELSE WANTS TO DO.
+          #  DO THE SH*T NO ONE ELSE IS EVEN THINKING ABOUT DOING.
+          #  PUT CHALLENGES IN FRONT OF YOURSELF.
+          #  PICK UP THE PACE!
+          ################################################################
+
+    - name: Verify MOTD content
+      ansible.builtin.command: cat /etc/motd.d/99-banner
+      register: motd_output
+
+    - name: Display MOTD verification results
+      ansible.builtin.debug:
+        var: motd_output.stdout_lines
+

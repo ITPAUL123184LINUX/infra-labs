@@ -1,0 +1,42 @@
+---
+
+  - name: Lesson 4 project 9 - Node exporter Cleanup 
+    hosts: all 
+    become: true 
+    gather_facts: false 
+
+    tasks:
+      - name: Stop and disable node_exporter service
+        ansible.builtin.service: 
+          name: node_exporter 
+          state: stopped 
+          enabled: false 
+
+      - name: Remove node_exporter binary
+        ansible.builtin.file: 
+          path: /usr/local/bin/node_exporter
+          state: absent 
+
+      - name: Remove node_exporter directory
+        ansible.builtin.file: 
+          path: /opt/node_exporter 
+          state: absent   
+
+      - name: Remove node_exporter systemd unit file
+        ansible.builtin.file: 
+          path: /etc/systemd/system/node_exporter.service 
+          state: absent
+
+      - name: Reload systemd to apply changes 
+        ansible.builtin.command: systemctl daemon-reload 
+        changed_when: false 
+
+      - name: Verify node_exporter removal 
+        ansible.builtin.command: which node_exporter 
+        register: check_exporter 
+        ignore_errors: true 
+
+      - name: Display verification result 
+        ansible.builtin.debug: 
+          msg: "Node exporter binary removed successfully" 
+        when: check_ exporter.rc !=0 

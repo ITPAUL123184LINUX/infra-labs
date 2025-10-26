@@ -1,0 +1,82 @@
+---
+- name: Lesson 4 Project 5 - Multi-Service Deployment (Apache + MariaDB)
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Ensure system packages are up to date
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+      register: update_output
+
+    - name: Install Apache (httpd)
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+    - name: Enable and start Apache service
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Verify Apache service status
+      ansible.builtin.command: systemctl is-active httpd
+      register: httpd_status
+      changed_when: false
+
+    - name: Display Apache verification result
+      ansible.builtin.debug:
+        msg: "Apache service is {{ httpd_status.stdout }}"
+
+    - name: Ensure firewalld is installed
+      ansible.builtin.dnf:
+        name: firewalld
+        state: present
+
+    - name: Enable and start firewalld service
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Allow HTTP service through firewall
+      ansible.posix.firewalld:
+        service: http
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: Install MariaDB server
+      ansible.builtin.dnf:
+        name:
+          - mariadb-server
+          - mariadb
+        state: present
+
+    - name: Enable and start MariaDB service
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Verify MariaDB service status
+      ansible.builtin.command: systemctl is-active mariadb
+      register: mariadb_status
+      changed_when: false
+
+    - name: Display MariaDB verification result
+      ansible.builtin.debug:
+        msg: "MariaDB service is {{ mariadb_status.stdout }}"
+
+    - name: Verify Apache is listening on port 80
+      ansible.builtin.shell: "ss -tuln | grep ':80' || true"
+      register: apache_port_check
+      changed_when: false
+
+    - name: Display Apache port verification
+      ansible.builtin.debug:
+        msg: "{{ apache_port_check.stdout | default('No output - Apache may not be listening') }}"
+

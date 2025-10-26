@@ -1,0 +1,28 @@
+---
+- name: Lesson 4 project 4 - MOTD Cleanup
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Remove dynamic MOTD banner file
+      ansible.builtin.file:
+        path: /etc/motd.d/99-banner
+        state: absent
+
+    - name: Remove MOTD profile script
+      ansible.builtin.file:
+        path: /etc/profile.d/motd.sh
+        state: absent
+
+    - name: Verify MOTD cleanup
+      ansible.builtin.shell: |
+        echo "--- Checking /etc/motd.d and /etc/profile.d ---"
+        ls -l /etc/motd.d/ 2>/dev/null || echo 'No motd.d directory'
+        ls -l /etc/profile.d/ | grep motd || echo 'No MOTD scripts left'
+      register: motd_cleanup_output
+
+    - name: Display cleanup verification
+      ansible.builtin.debug:
+        var: motd_cleanup_output.stdout_lines
+

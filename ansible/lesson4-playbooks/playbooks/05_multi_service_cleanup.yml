@@ -1,0 +1,62 @@
+---
+- name: Lesson 4 Project 5 - Multi-Service Cleanup (Apache + MariaDB)
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Stop and disable Apache service
+      ansible.builtin.service:
+        name: httpd
+        state: stopped
+        enabled: false
+
+    - name: Stop and disable MariaDB service
+      ansible.builtin.service:
+        name: mariadb
+        state: stopped
+        enabled: false
+
+    - name: Remove Apache and MariaDB packages
+      ansible.builtin.dnf:
+        name:
+          - httpd
+          - mariadb
+          - mariadb-server
+        state: absent
+
+    - name: Remove HTTP service rule from firewalld
+      ansible.posix.firewalld:
+        service: http
+        state: disabled
+        permanent: true
+        immediate: true
+      ignore_errors: true
+
+    - name: Remove MariaDB (MySQL) port 3306 rule from firewalld
+      ansible.posix.firewalld:
+        port: 3306/tcp
+        state: disabled
+        permanent: true
+        immediate: true
+      ignore_errors: true
+
+    - name: Reload firewalld to apply changes
+      ansible.builtin.command: firewall-cmd --reload
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify cleanup state
+      ansible.builtin.shell: |
+        echo "--- Checking services ---"
+        systemctl is-active httpd mariadb || echo "Both services stopped or absent"
+        echo "--- Checking packages ---"
+        rpm -q httpd mariadb mariadb-server || echo "Packages removed"
+        echo "--- Checking firewall rules ---"
+        firewall-cmd --list-all | egrep 'http|3306' || echo "Firewall clean"
+      register: cleanup_status
+
+    - name: Display cleanup verification
+      ansible.builtin.debug:
+        var: cleanup_status.stdout_lines
+
