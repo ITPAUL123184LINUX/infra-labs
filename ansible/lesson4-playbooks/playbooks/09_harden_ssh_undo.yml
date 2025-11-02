@@ -1,0 +1,25 @@
+---
+# Playbook: 09_harden_ssh_undo.yml
+# Purpose: Restore original SSH configuration from latest backup
+# Author: Paul Hagan
+
+- name: Restore SSH configuration to previous state
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Restore latest SSH configuration backup
+      ansible.builtin.shell: |
+        latest=$(ls -t /etc/ssh/sshd_config.* 2>/dev/null | head -n1)
+        if [ -n "$latest" ]; then
+          cp -f "$latest" /etc/ssh/sshd_config
+        else
+          echo "No backup files found"
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Validate restored SSH configuration
+      ansible.builtin.command: sshd -t
+

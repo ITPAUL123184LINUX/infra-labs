@@ -1,0 +1,38 @@
+---
+
+  - name: Undo /etc backup on all managed nodes 
+    hosts: all
+    become: true 
+    vars: 
+      backup_dir: /backups
+
+    tasks:
+      - name: Find existing /etc backup archives 
+        ansible.builtin.find: 
+          paths: "{{ backup_dir }}"
+          patterns: "etc_backup_*.tar.gz"
+        register: found_backups 
+
+      - name: Display found backup files 
+        ansible.builtin.debug: 
+          var: found_backups.files
+
+      - name: Remove old /etc backup archives 
+        ansible.builtin.file:
+          path: "{{ item.path }}"
+          state: absent
+        loop: "{{ found_backups.files }}"
+        when: found_backups.matched > 0       
+
+      - name: Verify /etc backups were removed 
+        ansible.builtin.stat: 
+          path: "{{ backup_dir }}"
+        register: backup_dir_status
+
+      - name: Assert no etc_backup files remain
+        ansible.builtin.assert:
+          that: 
+            - found_backups.matched == 0 or
+              (backup_dir_status.stat.exists and backup_dir_status.stat.isdir)
+          success_msg: "All /etc backups successfully removed." 
+          fail_msg: "Some /etc backup files may still remain in {{ backup_dir }}."

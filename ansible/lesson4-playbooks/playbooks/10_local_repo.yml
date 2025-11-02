@@ -1,0 +1,62 @@
+---
+# Playbook: 10_local_repo.yml
+# Purpose: Create and enable a local DNF/YUM repository for offline package installs
+# Author: Paul Hagan
+
+- name: Configure local repository on managed nodes
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Ensure rsync is installed
+      ansible.builtin.dnf:
+        name: rsync
+        state: present
+
+    - name: Create local repository directory
+      ansible.builtin.file:
+        path: /repo/local
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Mount RHEL ISO to /mnt/repo
+      ansible.builtin.mount:
+        path: /mnt/repo
+        src: /dev/sr1
+        fstype: iso9660
+        state: mounted
+
+    - name: Copy local repository packages (remote to remote)
+      ansible.builtin.command: /usr/bin/rsync -a /mnt/repo/ /repo/local/
+      args:
+        creates: /repo/local/media.repo
+
+    - name: Generate repository metadata
+      ansible.builtin.command: createrepo /repo/local
+      args:
+        creates: /repo/local/repodata
+
+    - name: Create local repository definition
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/local.repo
+        content: |
+          [localrepo]
+          name=Local Repository
+          baseurl=file:///repo/local
+          enabled=1
+          gpgcheck=0
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Validate local repository availability
+      ansible.builtin.command: dnf repolist --disablerepo="*" --enablerepo="localrepo"
+      register: repo_check
+
+    - name: Display repository validation results
+      ansible.builtin.debug:
+        var: repo_check.stdout
+

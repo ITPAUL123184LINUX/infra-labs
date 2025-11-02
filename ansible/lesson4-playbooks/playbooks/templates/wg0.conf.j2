@@ -1,0 +1,11 @@
+[Interface]
+Address = 10.0.0.{{ inventory_hostname[-1] }}/24
+PrivateKey = {{ wg_privatekey.content | b64decode | trim }}
+ListenPort = 51820
+
+{% for host in groups['all'] if host != inventory_hostname %}
+[Peer]
+PublicKey = {{ lookup('file', '/home/ansible/infra-labs/ansible/lesson4-playbooks/wireguard_keys/' + host + '.pub') }}
+AllowedIPs = 10.0.0.{{ host[-1] }}/32
+{% endfor %}
+

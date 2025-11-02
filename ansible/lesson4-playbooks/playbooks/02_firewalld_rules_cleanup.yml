@@ -1,0 +1,54 @@
+---
+
+  - name: Lesson 4 Project 6 - Firewalld Cleanup (Safe SSH)
+    hosts: all
+    become: true 
+    gather_facts: false
+
+    tasks: 
+      - name: Remove HTTP service from public zone 
+        ansible.builtin.firewalld: 
+          service: http
+          zone: public
+          permanent: true 
+          state: disabled
+          immediate: true 
+
+    # SSH intentionally left enabled for Ansible connectivity
+    # - name: Remove SSH service from public zone
+    #  ansible.posix.firewalld:
+    #    service: ssh
+    #    zone: public
+    #    permanent: true
+    #    state: disabled
+    #    immediate: true
+
+      - name: Remove custom port 8080/tcp 
+        ansible.posix.firewalld: 
+          port: 8080/tcp
+          zone: public 
+          permanent: true
+          state: disabled
+          immediate: true 
+
+      - name: Remove rich rule for 10.0.0.5 
+        ansible.posix.firewalld: 
+          rich_rule: 'rule family="ipv4" source address="10.0.0.5" drop'
+          zone: public
+          permanent: true 
+          state: disabled
+          immediate: true 
+
+      - name: Reload firewalld
+        ansible.builtin.command: firewall-cmd --reload 
+        changed_when: false 
+
+      - name: Verify cleaned configuration
+        ansible.builtin.command: firewall-cmd --list-all
+        register: fw_clean
+        changed_when: false
+
+
+      - name: Display cleanup verification output
+        ansible.builtin.debug: 
+          var: fw_clean.stdout_lines

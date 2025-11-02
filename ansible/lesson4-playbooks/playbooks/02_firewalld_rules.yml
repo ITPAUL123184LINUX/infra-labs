@@ -1,0 +1,57 @@
+---
+
+  - name: Lesson 4 Project 6 - Firewalld Zone and Rule Automation
+    hosts: all
+    become: true 
+    gather_facts: true
+
+    tasks: 
+      - name: Ensure firewalld is installed
+        ansible.builtin.dnf:
+          name: firewalld 
+          state: present 
+
+      - name: Ensure firewalld service is running and enabled 
+        ansible.builtin.service: 
+          name: firewalld 
+          state: started
+          enabled: true
+
+      - name: Add HTTP and SSH services to the public zone 
+        ansible.posix.firewalld: 
+          service: "{{ item }}"
+          zone: public
+          permanent: true 
+          state: enabled 
+          immediate: true 
+        loop: 
+          - http
+          - ssh
+
+      - name: Add a custom port to the public zone 
+        ansible.posix.firewalld: 
+          port: 8080/tcp
+          zone: public 
+          permanent: true 
+          state: enabled
+          immediate: true 
+
+      - name: Add a rich rule to drop traffic from 10.0.0.5
+        ansible.posix.firewalld:
+          rich_rule: 'rule family="ipv4" source address="10.0.0.5" drop'
+          zone: public
+          state: enabled
+          immediate: true 
+
+      - name: Reload firewalld configuration
+        ansible.builtin.command: firewall-cmd --reload 
+        changed_when: false 
+
+      - name: Verify firewalld configuration 
+        ansible.builtin.command: firewall-cmd --list-all
+        register: fw_status
+        changed_when: false 
+
+      - name: Display current firewalld zone configuration 
+        ansible.builtin.debug: 
+          var: fw_status.stdout_lines 

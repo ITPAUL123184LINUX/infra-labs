@@ -1,0 +1,158 @@
+---
+
+  - name: Lesson 4 project 6 - Wireguard VPN Deployment 
+    hosts: all
+    become: true 
+    gather_facts: true 
+
+    tasks: 
+      - name: Enable CodeReady Builder repository (for RHEL 9)
+        ansible.builtin.command:
+          cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms"
+        register: codeready_repo
+        changed_when: "'enabled' in codeready_repo.stdout"
+        failed_when: codeready_repo.rc != 0 and "'already enabled' not in codeready_repo.stdout"
+
+      - name: Ensure EPEL release package is available
+        ansible.builtin.command:
+          cmd: "dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+        register: epel_install
+        changed_when: "'Complete!' in epel_install.stdout or 'installed' in epel_install.stdout"
+        failed_when: epel_install.rc != 0
+
+      - name: Install Wireguard packages
+        ansible.builtin.dnf: 
+          name: 
+            - wireguard-tools
+          state: present
+
+      - name: Enable and start Wireguard service
+        ansible.builtin.service:
+          name: wg-quick@wg0
+          enabled: true 
+          state: started
+        ignore_errors: true   
+
+      - name: Verify Wireguard installation
+        ansible.builtin.command: wg --version
+        register: wg_version
+        changed_when: false 
+
+      - name: Display installed Wireguard version
+        ansible.builtin.debug: 
+          msg: "Wireguard version: {{ wg_version.stdout }}"
+
+
+  - name: Generate Wireguard keypairs 
+    hosts: all
+    become: true 
+    tasks: 
+      - name: Ensure Wireguard directory exists
+        ansible.builtin.file:
+          path: /etc/wireguard
+          state: directory
+          mode: '0700'
+
+      - name: Generate private key if not present
+        ansible.builtin.command: bash -c 'wg genkey > /etc/wireguard/privatekey'
+        args: 
+          creates: /etc/wireguard/privatekey
+
+      - name: Set permissions on private key
+        ansible.builtin.file:
+          path: /etc/wireguard/privatekey
+          mode: '0600'
+
+      - name: Generate public key from private key
+        ansible.builtin.command: bash -c 'wg pubkey < /etc/wireguard/privatekey > /etc/wireguard/publickey'
+        args:
+          creates: /etc/wireguard/publickey
+
+      - name: Read public key content
+        ansible.builtin.slurp: 
+          src: /etc/wireguard/publickey
+        register: wg_public
+
+      - name: Save public key on control node
+        ansible.builtin.copy:
+          content: "{{ wg_public.content | b64decode }}"
+          dest: "/home/ansible/infra-labs/ansible/lesson4-playbooks/wireguard_keys/{{ inventory_hostname }}.pub"
+        delegate_to: localhost
+
+  - name: Deploy Wireguard configuration to all nodes
+    hosts: all 
+    become: true 
+    gather_facts: true
+
+    tasks: 
+      - name: Create Wireguard configuration directory
+        ansible.builtin.file: 
+          path: /etc/wireguard
+          state: directory
+          mode: '0700'
+
+      - name: Read Wireguard private key from remote host
+        slurp: 
+          path: /etc/wireguard/privatekey
+        register: wg_privatekey 
+
+      - name: Deploy wg0.conf from template
+        ansible.builtin.template:
+          src: templates/wg0.conf.j2
+          dest: /etc/wireguard/wg0.conf 
+          owner: root
+          group: root
+          mode: '0600'
+
+      - name: Enable and start Wireguard interface
+        ansible.builtin.service: 
+          name: wg-quick@wg0
+          enabled: true 
+          state: started 
+
+      - name: Verify Wireguard interface status 
+        ansible.builtin.command: wg show
+        register: wg_status
+        changed_when: false 
+
+      - name: Display Wireguard output
+        ansible.builtin.debug: 
+          var: wg_status.stdout_lines 
+
+  - name: Configure Firewalld for WireGuard
+    hosts: all
+    become: true
+    tasks:
+      - name: Ensure firewalld package is installed
+        ansible.builtin.dnf: 
+          name: firewalld
+          state: present
+
+      - name: Ensure firewalld is running
+        ansible.builtin.service: 
+          name: firewalld
+          state: started
+          enabled: true  
+
+      - name: Allow Wireguard port 51820/udp permanently 
+        ansible.posix.firewalld: 
+          port: 51820/udp
+          zone: public 
+          permanent: true 
+          state: enabled
+          immediate: yes 
+
+      - name: Reload firewalld 
+        ansible.builtin.command: /usr/bin/firewall-cmd --reload 
+        register: fw_reload
+        ignore_errors: false 
+        changed_when: fw_reload.rc == 0 
+
+      - name: Verify Wireguard port 
+        ansible.builtin.command: /usr/bin/firewall-cmd --list-ports 
+        register: fw_ports 
+        changed_when: false 
+
+      - name: Display firewall verification output 
+        ansible.builtin.debug:
+          msg: "Ports on {{ inventory_hostname }} => {{ fw_ports.stdout }}"

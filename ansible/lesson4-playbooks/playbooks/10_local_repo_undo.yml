@@ -1,0 +1,35 @@
+---
+
+# Playbook: 10:local_repo_undo.yml
+# Purpose: Revert and clean up the local DNF/YUM repository setup
+# Aurthor: Paul Hagan 
+
+
+  - name: Revert local repository configuration
+    hosts: all 
+    become: yes 
+    gather_facts: no
+
+    tasks: 
+      - name: Unmount RHEL ISO from /mnt/repo
+        ansible.builtin.mount: 
+          path: /mnt/repo
+          state: unmounted 
+
+      - name: Remove repository directory 
+        ansible.builtin.file: 
+          path: /repo/local 
+          state: absent
+
+      - name: Remove local.repo file
+        ansible.builtin.file: 
+          path: /etc/yum.repos.d/local.repo
+          state: absent
+
+      - name: Verify cleanup
+        ansible.builtin.shell: ls /repo || true 
+        register: verify_repo 
+
+      - name: Display verification output 
+        ansible.builtin.debug: 
+          var: verify_repo.stdout 

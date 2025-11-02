@@ -1,0 +1,41 @@
+---
+- name: Backup /etc directory on all managed nodes
+  hosts: all
+  become: true
+  vars:
+    backup_dir: /backups
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time | regex_replace(':', '') }}"
+    backup_file: "{{ backup_dir }}/etc_backup_{{ inventory_hostname }}_{{ timestamp }}.tar.gz"
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Archive /etc directory with timestamp
+      ansible.builtin.command: >
+        tar -cvf {{ backup_file }} /etc
+      args: 
+        creates: "{{ backup_file }}"  
+      register: backup_status
+
+    - name: Display backup summary
+      ansible.builtin.debug:
+        msg: "Backup completed for {{ inventory_hostname }}: {{ backup_file }} (changed={{ backup_status.changed }})"
+
+    - name: Verify backup file exists
+      ansible.builtin.stat:
+        path: "{{ backup_file }}"
+      register: verify_backup
+
+    - name: Assert backup creation success
+      ansible.builtin.assert:
+        that:
+          - verify_backup.stat.exists
+        fail_msg: "Backup failed for {{ inventory_hostname }}"
+        success_msg: "Backup verified successfully for {{ inventory_hostname }}"
+
