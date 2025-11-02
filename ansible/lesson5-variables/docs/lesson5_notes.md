@@ -126,3 +126,14 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <li><b>debug</b> prints the resolved value (proves templating works).</li>
 <li><b>user task</b>: first run shows <code>changed</code>; re-run shows <code>ok</code> (idempotent).</li>
 </ul>
+
+<h3>Small summary: what this playbook does</h3>
+<ul>
+<li><b>vars</b>: defines <code>user: lisa</code> for the whole play.</li>
+<li><b>debug</b>: prints <code>the username is {{ user }}</code> so I can see templating resolved to “lisa”.</li>
+<li><b>user task</b>: creates the account using quotes
+<code>name: "{{ user }}"</code> (quotes required when a var starts the value).</li>
+<li><b>Idempotency</b>: first run shows <code>changed</code> on hosts where the user didn’t exist; re-run shows <code>ok</code>.</li>
+<li><b>Run anatomy</b>: “GATHERING FACTS” → debug output → user creation → “PLAY RECAP” (ok/changed/failed).</li>
+</ul>
+<!-- screenshot (summary block shown in run): docs/img/lesson5-user-play-run.png -->
