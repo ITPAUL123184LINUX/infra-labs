@@ -118,19 +118,21 @@ ansible all -a 'cat /etc/motd' -o
 
 <p>Below are the 10 playbook projects that will build on Sander’s concepts, demonstrating real-world system automation, idempotency, and RHCE-grade logic.</p>
 
+<!-- START: Playbook Index -->
 <table>
 <tr><th>#</th><th>Playbook</th><th>Description</th></tr>
-<tr><td>1</td><td><code>01_user_mgmt.yml</code></td><td>User and group management with SSH keys</td></tr>
-<tr><td>2</td><td><code>02_firewalld_rules.yml</code></td><td>Zone, port, and rich-rule automation</td></tr>
-<tr><td>3</td><td><code>03_packages_updates.yml</code></td><td>Patch management and package verification</td></tr>
-<tr><td>4</td><td><code>04_motd_banner.yml</code></td><td>Dynamic /etc/motd deployment via Jinja2</td></tr>
-<tr><td>5</td><td><code>05_multi_service.yml</code></td><td>Deploy Apache + MariaDB multi-play orchestration</td></tr>
-<tr><td>6</td><td><code>06_wireguard_setup.yml</code></td><td>WireGuard VPN auto-configuration</td></tr>
-<tr><td>7</td><td><code>07_backup_etc.yml</code></td><td>Backup /etc/ and compress with timestamp</td></tr>
-<tr><td>8</td><td><code>08_monitor_agent.yml</code></td><td>Install and enable node_exporter agent</td></tr>
-<tr><td>9</td><td><code>09_harden_ssh.yml</code></td><td>Enforce SSH security baselines</td></tr>
-<tr><td>10</td><td><code>10_local_repo.yml</code></td><td>Create local DNF/YUM repo for offline environments</td></tr>
+<tr><td>1</td><td><code>01_user_mgmt.yml</code></td><td>Users, groups, SSH keys</td></tr>
+<tr><td>2</td><td><code>02_firewalld_rules.yml</code></td><td>Zones, ports, rich rules</td></tr>
+<tr><td>3</td><td><code>03_package_mgmt.yml</code></td><td>Install/update/remove packages</td></tr>
+<tr><td>4</td><td><code>04_motd_banner.yml</code></td><td>Jinja2 MOTD</td></tr>
+<tr><td>5</td><td><code>05_multi_service.yml</code></td><td>Apache + MariaDB (multi-play)</td></tr>
+<tr><td>6</td><td><code>06_wireguard_setup.yml</code></td><td>WireGuard VPN</td></tr>
+<tr><td>7</td><td><code>07_backup_etc.yml</code></td><td>Timestamped /etc backup</td></tr>
+<tr><td>8</td><td><code>08_monitor_agent.yml</code></td><td>node_exporter</td></tr>
+<tr><td>9</td><td><code>09_harden_ssh.yml</code></td><td>SSH hardening</td></tr>
+<tr><td>10</td><td><code>10_local_repo.yml</code></td><td>Local DNF repo</td></tr>
 </table>
+<!-- END: Playbook Index -->
 
 ---
 
