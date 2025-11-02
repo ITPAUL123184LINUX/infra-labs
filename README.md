@@ -14,3 +14,17 @@ ansible-inventory --graph
 ansible all -m ping -o
 ansible all -b -m command -a 'id' -o
 
+
+- **Lesson 3 – Ad-hoc**
+  - Folder: [ansible/lesson3-ad-hoc/](ansible/lesson3-ad-hoc/)
+  - Lesson README: [ansible/lesson3-ad-hoc/README.md](ansible/lesson3-ad-hoc/README.md)
+  - Deep Notes: [ansible/lesson3-ad-hoc/docs/lesson3-notes.md](ansible/lesson3-ad-hoc/docs/lesson3-notes.md)
+
+- **Lesson 4 – Playbooks**
+  - Folder: [ansible/lesson4-playbooks/](ansible/lesson4-playbooks/)
+  - Lesson README: [ansible/lesson4-playbooks/docs/README.md](ansible/lesson4-playbooks/docs/README.md)
+  - Deep Notes: [ansible/lesson4-playbooks/docs/lesson4_notes.md](ansible/lesson4-playbooks/docs/lesson4_notes.md)
+
+- **Lesson 5 – Variables & Vault**
+  - Folder: [ansible/lesson5-variables/](ansible/lesson5-variables/)
+  - Deep Notes: [ansible/lesson5-variables/docs/lesson5_notes.md](ansible/lesson5-variables/docs/lesson5_notes.md)
