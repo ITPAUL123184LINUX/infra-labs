@@ -28,3 +28,34 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <!-- cmd: ansible -m setup all | head -->
 <!-- cmd: ansible-playbook playbooks/01_vars_demo.yml -v -->
 <!-- cmd: ansible-playbook playbooks/01_vars_demo.yml -e "web_service=nginx" -v -->
+
+<h2>Using Variables in a Playbook (fast patterns)</h2>
+<ul>
+<li><b>Inline in the play:</b> quick demo or one-off value.
+<pre><code>---
+- hosts: all
+  vars:
+    web_package: httpd
+</code></pre>
+</li>
+
+<li><b>vars_files:</b> keep values in a separate file; playbook stays clean.
+<pre><code>---
+- hosts: all
+  vars_files:
+    - vars/users.yml
+</code></pre>
+</li>
+
+<li><b>When to use which:</b>
+  Inline = temporary/small.  
+  <code>vars_files</code> = reusable or bigger sets.  
+  Long-term defaults still live in <code>group_vars/</code> / <code>host_vars/</code> (stronger structure).</li>
+
+<li><b>Naming rule:</b> name by intent (<code>web_package</code>, <code>admin_user</code>), not by OS.</li>
+</ul>
+
+<h3>Proof cues (screens later)</h3>
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml --syntax-check -->
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -v -->
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -e "web_package=nginx" -v -->
