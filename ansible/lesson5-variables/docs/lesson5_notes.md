@@ -137,3 +137,29 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <li><b>Run anatomy</b>: “GATHERING FACTS” → debug output → user creation → “PLAY RECAP” (ok/changed/failed).</li>
 </ul>
 <!-- screenshot (summary block shown in run): docs/img/lesson5-user-play-run.png -->
+
+<h2>Includes (vars_files)</h2>
+<p>Keep site-specific data out of playbooks. Put it in files and include them with <code>vars_files</code> so the play stays portable.</p>
+
+<ul>
+  <li><b>Rule:</b> variables file is simple <code>key: value</code> YAML.</li>
+  <li><b>Path:</b> paths are <i>relative to the playbook file</i> (our example: <code>../vars/users.yml</code>).</li>
+  <li><b>Type:</b> it’s a list; you can include multiple files.</li>
+  <li><b>Precedence:</b> loading via <code>vars_files</code> doesn’t change normal var precedence.</li>
+</ul>
+
+<p><b>Slide recap</b></p>
+<p><img src="docs/img/lesson5-includes-slide.png" alt="Includes slide: use vars_files, key:value" width="900"/></p>
+
+<p><b>ansible-doc check</b></p>
+<!-- cmd: ansible-doc -t keyword vars_files -->
+<p><img src="docs/img/ansible-doc-vars_files.png" alt="ansible-doc vars_files keyword output" width="900"/></p>
+
+<p><b>Playbook snippet used</b></p>
+<pre><code>vars_files:
+  - ../vars/users.yml
+</code></pre>
+
+<p><b>Run proof</b></p>
+<!-- cmd: ansible-playbook playbooks/user.yml -v -->
+<p><img src="docs/img/lesson5-vars_files-run.png" alt="vars_files play run showing ok/changed" width="900"/></p>
