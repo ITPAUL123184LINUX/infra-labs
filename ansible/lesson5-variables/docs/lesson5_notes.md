@@ -94,3 +94,35 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <!-- save as: docs/img/lesson5-first-run.png -->
 <!-- cmd: ansible-playbook playbooks/02_use_vars.yml -e "web_service=nginx" -v -->
 <!-- save as: docs/img/lesson5-cli-override.png -->
+
+<h2>Debug module (see what the vars resolve to)</h2>
+<ul>
+<li><b>Purpose:</b> print values while the play runs—perfect for sanity checks.</li>
+<li><b>Usage:</b> <code>ansible.builtin.debug:</code> <code>msg: "the username is {{ user }}"</code></li>
+<li><b>Quoting rule:</b> if a variable is the <i>first</i> thing in a string, wrap it in quotes:
+<code>"{{ user }}"</code>.</li>
+<li><b>Tip:</b> add <code>-v</code>/<code>-vv</code> for more detail during runs.</li>
+</ul>
+
+<pre><code>---
+- name: create a user using a variable
+  hosts: all
+  vars:
+    user: lisa
+  tasks:
+    - name: using debug
+      ansible.builtin.debug:
+        msg: "the username is {{ user }}"
+    - name: create a user {{ user }}
+      ansible.builtin.user:
+        name: "{{ user }}"
+</code></pre>
+
+<!-- screenshot (YAML): docs/img/lesson5-debug-yaml.png -->
+<!-- screenshot (run output): docs/img/lesson5-debug-run.png -->
+
+<h3>Reading the debug run</h3>
+<ul>
+<li><b>debug</b> prints the resolved value (proves templating works).</li>
+<li><b>user task</b>: first run shows <code>changed</code>; re-run shows <code>ok</code> (idempotent).</li>
+</ul>
