@@ -59,3 +59,28 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <!-- cmd: ansible-playbook playbooks/02_use_vars.yml --syntax-check -->
 <!-- cmd: ansible-playbook playbooks/02_use_vars.yml -v -->
 <!-- cmd: ansible-playbook playbooks/02_use_vars.yml -e "web_package=nginx" -v -->
+
+<h2>Using Vars in a Play (what my screenshots show)</h2>
+<ul>
+<li><b>Inline vars</b> via <code>vars:</code> or load with <code>vars_files:</code>.</li>
+<li><b>Jinja use:</b> <code>{{ var }}</code>. If it starts the value, use quotes: <code>"{{ web_package }}"</code>.</li>
+</ul>
+
+<pre><code>---
+- hosts: all
+  vars:
+    user: lisa
+  tasks:
+    - name: create a user {{ user }}
+      ansible.builtin.user:
+        name: "{{ user }}"
+</code></pre>
+<!-- screenshot: add image of the YAML here (user.yml) -->
+
+<h3>Reading the run</h3>
+<ul>
+<li><b>GATHERING FACTS</b> populates <code>ansible_facts</code>.</li>
+<li><b>TASK create a user lisa</b> shows per-host result: <code>changed</code> when the user is created; <code>ok</code> on rerun (idempotent).</li>
+<li><b>PLAY RECAP</b>: <code>ok</code>=executed fine, <code>changed</code>=state changed, <code>failed</code>=errors (should be 0).</li>
+</ul>
+<!-- screenshot: add terminal output of the play recap -->
