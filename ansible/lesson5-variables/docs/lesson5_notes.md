@@ -84,3 +84,13 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <li><b>PLAY RECAP</b>: <code>ok</code>=executed fine, <code>changed</code>=state changed, <code>failed</code>=errors (should be 0).</li>
 </ul>
 <!-- screenshot: add terminal output of the play recap -->
+
+<h3>Screenshots (drop in docs/img/)</h3>
+<!-- cmd: ansible -m setup all | head -->
+<!-- save as: docs/img/lesson5-facts-head.png -->
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml --syntax-check -->
+<!-- save as: docs/img/lesson5-syntax-ok.png -->
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -v -->
+<!-- save as: docs/img/lesson5-first-run.png -->
+<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -e "web_service=nginx" -v -->
+<!-- save as: docs/img/lesson5-cli-override.png -->
