@@ -1,19 +1,13 @@
+
 # infra-labs
 Learning and lab work in Linux administration, automation, and observability. Building skills step by step in Bash, Python, Ansible/AWX, Grafana/Prometheus, and beyond.
 
 ## Labs Index
 
 - **Lesson 2 – Managed Environment**
-  - Folder: [`ansible/lesson2-managed-env/`](ansible/lesson2-managed-env/)
-  - Lesson README: [`ansible/lesson2-managed-env/README.md`](ansible/lesson2-managed-env/README.md)
-  - Deep Notes: [`ansible/lesson2-managed-env/docs/lesson2-notes.md`](ansible/lesson2-managed-env/docs/lesson2-notes.md)
-
-### Quick validate
-```bash
-ansible-inventory --graph
-ansible all -m ping -o
-ansible all -b -m command -a 'id' -o
-
+  - Folder: [ansible/lesson2-managed-env/](ansible/lesson2-managed-env/)
+  - Lesson README: [ansible/lesson2-managed-env/README.md](ansible/lesson2-managed-env/README.md)
+  - Deep Notes: [ansible/lesson2-managed-env/docs/lesson2-notes.md](ansible/lesson2-managed-env/docs/lesson2-notes.md)
 
 - **Lesson 3 – Ad-hoc**
   - Folder: [ansible/lesson3-ad-hoc/](ansible/lesson3-ad-hoc/)
@@ -28,3 +22,9 @@ ansible all -b -m command -a 'id' -o
 - **Lesson 5 – Variables & Vault**
   - Folder: [ansible/lesson5-variables/](ansible/lesson5-variables/)
   - Deep Notes: [ansible/lesson5-variables/docs/lesson5_notes.md](ansible/lesson5-variables/docs/lesson5_notes.md)
+
+## Quick validate
+```bash
+ansible-inventory --graph
+ansible all -m ping -o
+ansible all -b -m command -a 'id' -o
