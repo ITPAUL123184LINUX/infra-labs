@@ -1,2 +1,2 @@
 # Deep Notes
-Design decisions, screenshots, pitfalls, proofs.
+Design choices, screenshots, pitfalls, proofs-of-work.

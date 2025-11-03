@@ -1,2 +1,2 @@
 # Runbook
-Start/stop, logs, backup/restore, troubleshooting.
+Start/stop, logs, rotate, backup/restore, troubleshooting.
