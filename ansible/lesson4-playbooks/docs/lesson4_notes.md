@@ -13,15 +13,14 @@ through both structured YAML understanding and real-world automation use cases.<
 </ul>
 
 <p align="center">
-  <b>Screenshot:</b> Lesson 4 structure before building any playbooks.
   <br>
-  <img src="./screenshots/lesson4-structure-initial.PNG" alt="Lesson 4 Folder Layout" width="700"/>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/lesson4-tree.PNG"/>
 </p>
 
 <hr/>
 
 <h2>4.1 Using YAML to Write Playbooks</h2>
-<p><b>Purpose:</b> Learn to describe tasks declaratively using YAML syntax instead of ad-hoc commands.</p>
+<p><b>Purpose:</b> Learn to describe tasks declaratively using YAML syntax instead of ansible ad-hoc commands.</p>
 
 <ul>
   <li><b>What YAML is:</b> YAML (YAML Ain’t Markup Language) is indentation-based, human-readable data format used by Ansible to define tasks, variables, and roles.</li>
@@ -35,25 +34,21 @@ through both structured YAML understanding and real-world automation use cases.<
   </li>
 </ul>
 
-<pre><code># Example playbook structure
----
-- name: Create a directory on all managed nodes
-  hosts: managed
-  become: true
-  tasks:
-    - name: Ensure /opt/lesson4 exists
-      ansible.builtin.file:
-        path: /opt/lesson4
-        state: directory
-        mode: '0755'
-</code></pre>
+<h2>Example playbook structure</h2>
+<p align="center">
+  <br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/L4TEST.yml.PNG"/>
+</p>
+
 
 <ul>
   <li><b>Command to run:</b>
-  <pre><code>ansible-playbook playbooks/01_user_mgmt.yml -v</code></pre></li>
+  <pre><code>ansible-playbook playbooks/L4TEST.yml</code></pre></li>
   <li><b>Expected output:</b> 
-  <code>changed=true</code> on first run; <code>ok</code> on second — proving idempotency.</li>
-</ul>
+  <p align="center">
+  <br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/L4TEST.outpt.PNG"/>
+</p>
 
 ---
 
@@ -76,6 +71,12 @@ through both structured YAML understanding and real-world automation use cases.<
 <pre><code>ansible-playbook playbooks/01_user_mgmt.yml --syntax-check
 </code></pre>
 <ul>
+
+  <p align="center">
+  <br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/lesson4-syntax-check.PNG"/>
+</p>
+
   <li><b>Success Output:</b> “playbook: playbooks/01_user_mgmt.yml”</li>
   <li><b>Failure Output:</b> line/column error message identifying bad indentation or colon alignment.</li>
 </ul>
