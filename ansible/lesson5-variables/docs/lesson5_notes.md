@@ -1,4 +1,4 @@
-<h1>Lesson 5 – Variables (My Notes)</h1>
+<h1>Lesson 5 – Variables (Deep Notes)</h1>
 
 <h2>Goal</h2>
 <b>Stop hard-coding. Name the moving parts once and let Ansible swap values per host/distro.</b>
@@ -75,7 +75,6 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
       ansible.builtin.user:
         name: "{{ user }}"
 </code></pre>
-<!-- screenshot: add image of the YAML here (user.yml) -->
 
 <h3>Reading the run</h3>
 <ul>
@@ -83,17 +82,6 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
 <li><b>TASK create a user lisa</b> shows per-host result: <code>changed</code> when the user is created; <code>ok</code> on rerun (idempotent).</li>
 <li><b>PLAY RECAP</b>: <code>ok</code>=executed fine, <code>changed</code>=state changed, <code>failed</code>=errors (should be 0).</li>
 </ul>
-<!-- screenshot: add terminal output of the play recap -->
-
-<h3>Screenshots (drop in docs/img/)</h3>
-<!-- cmd: ansible -m setup all | head -->
-<!-- save as: docs/img/lesson5-facts-head.png -->
-<!-- cmd: ansible-playbook playbooks/02_use_vars.yml --syntax-check -->
-<!-- save as: docs/img/lesson5-syntax-ok.png -->
-<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -v -->
-<!-- save as: docs/img/lesson5-first-run.png -->
-<!-- cmd: ansible-playbook playbooks/02_use_vars.yml -e "web_service=nginx" -v -->
-<!-- save as: docs/img/lesson5-cli-override.png -->
 
 <h2>Debug module (see what the vars resolve to)</h2>
 <ul>
@@ -118,48 +106,210 @@ Anything sensitive (passwords, API tokens, private keys) lives in Vault. Period.
         name: "{{ user }}"
 </code></pre>
 
-<!-- screenshot (YAML): docs/img/lesson5-debug-yaml.png -->
-<!-- screenshot (run output): docs/img/lesson5-debug-run.png -->
-
-<h3>Reading the debug run</h3>
-<ul>
-<li><b>debug</b> prints the resolved value (proves templating works).</li>
-<li><b>user task</b>: first run shows <code>changed</code>; re-run shows <code>ok</code> (idempotent).</li>
-</ul>
-
 <h3>Small summary: what this playbook does</h3>
 <ul>
 <li><b>vars</b>: defines <code>user: lisa</code> for the whole play.</li>
-<li><b>debug</b>: prints <code>the username is {{ user }}</code> so I can see templating resolved to “lisa”.</li>
-<li><b>user task</b>: creates the account using quotes
-<code>name: "{{ user }}"</code> (quotes required when a var starts the value).</li>
-<li><b>Idempotency</b>: first run shows <code>changed</code> on hosts where the user didn’t exist; re-run shows <code>ok</code>.</li>
-<li><b>Run anatomy</b>: “GATHERING FACTS” → debug output → user creation → “PLAY RECAP” (ok/changed/failed).</li>
+<li><b>debug</b>: prints the resolved value (proves templating works).</li>
+<li><b>user task</b>: creates the account using <code>name: "{{ user }}"</code>.</li>
+<li><b>Idempotency</b>: first run → <code>changed</code>, second → <code>ok</code>.</li>
 </ul>
-<!-- screenshot (summary block shown in run): docs/img/lesson5-user-play-run.png -->
 
 <h2>Includes (vars_files)</h2>
 <p>Keep site-specific data out of playbooks. Put it in files and include them with <code>vars_files</code> so the play stays portable.</p>
 
 <ul>
   <li><b>Rule:</b> variables file is simple <code>key: value</code> YAML.</li>
-  <li><b>Path:</b> paths are <i>relative to the playbook file</i> (our example: <code>../vars/users.yml</code>).</li>
+  <li><b>Path:</b> paths are <i>relative to the playbook file</i> (example: <code>../vars/users.yml</code>).</li>
   <li><b>Type:</b> it’s a list; you can include multiple files.</li>
   <li><b>Precedence:</b> loading via <code>vars_files</code> doesn’t change normal var precedence.</li>
 </ul>
 
-<p><b>Slide recap</b></p>
-<p><img src="docs/img/lesson5-includes-slide.png" alt="Includes slide: use vars_files, key:value" width="900"/></p>
+<p align="center">
+  <img src="docs/img/lesson5-includes-slide.png" alt="Includes slide: use vars_files, key:value" width="900"/>
+</p>
 
 <p><b>ansible-doc check</b></p>
 <!-- cmd: ansible-doc -t keyword vars_files -->
 <p><img src="docs/img/ansible-doc-vars_files.png" alt="ansible-doc vars_files keyword output" width="900"/></p>
 
-<p><b>Playbook snippet used</b></p>
-<pre><code>vars_files:
-  - ../vars/users.yml
-</code></pre>
-
 <p><b>Run proof</b></p>
 <!-- cmd: ansible-playbook playbooks/user.yml -v -->
 <p><img src="docs/img/lesson5-vars_files-run.png" alt="vars_files play run showing ok/changed" width="900"/></p>
+
+<hr/>
+
+<h2>Using Host Variables</h2>
+
+<p><b>Goal:</b> Define per-host values cleanly instead of mixing them inside the inventory.</p>
+
+<ul>
+  <li><b>Host variables</b> are unique values tied to a specific host (for example, IPs or DB names).</li>
+  <li>They live under <code>host_vars/</code>, named after each hostname.</li>
+  <li>Shared values live under <code>group_vars/</code>.</li>
+  <li>Ansible loads both automatically—no includes needed.</li>
+  <li>Inventory inline variables are <b>deprecated</b>.</li>
+</ul>
+
+<pre><code>inventory/
+├── hosts.ini
+├── host_vars/
+│   ├── ansible1.yml
+│   └── ansible2.yml
+└── group_vars/
+    ├── webservers.yml
+    └── dbservers.yml
+</code></pre>
+
+<pre><code>ansible all -m ansible.builtin.debug -a "var=ansible_hostname" -o
+</code></pre>
+
+<p align="center">
+  <img src="docs/img/lesson5-host-vars-slide.png" alt="Using Host Variables slide summary" width="900"/>
+</p>
+
+<hr/>
+
+<h2>System Variables</h2>
+
+<p><b>Goal:</b> Know what Ansible provides automatically—and that you <b>cannot override them</b>.</p>
+
+<p>System variables are built in and always available. You can reference them, but never redefine them.</p>
+
+<ul>
+  <li><code>hostvars</code> — dictionary of every host’s variables (<code>hostvars['ansible1']['ansible_hostname']</code>).</li>
+  <li><code>inventory_hostname</code> — full name of the host as defined in inventory.</li>
+  <li><code>inventory_hostname_short</code> — short name (everything before first dot).</li>
+  <li><code>groups</code> — dictionary of all inventory groups and their members.</li>
+  <li><code>group_names</code> — list of groups the current host belongs to.</li>
+  <li><code>ansible_check_mode</code> — true if play runs with <code>--check</code> (dry-run).</li>
+  <li><code>ansible_play_batch</code> / <code>ansible_play_hosts</code> — hosts active in current play.</li>
+  <li><code>ansible_version</code> — current version of Ansible running.</li>
+</ul>
+
+<p><b>Key rule:</b> These variables are read-only. Use them to query or filter data, never assign to them.</p>
+
+<h3>Quick proof</h3>
+<pre><code>ansible all -m ansible.builtin.debug -a "var=inventory_hostname" -o
+ansible all -m ansible.builtin.debug -a "var=group_names" -o
+ansible all -m ansible.builtin.debug -a "var=ansible_version" -o
+</code></pre>
+
+<p><b>Why:</b> This confirms the built-in variables exist for every host automatically. Perfect for conditionals, loops, and templating logic.</p>
+
+<p align="center">
+  <img src="docs/img/lesson5-system-vars-slide.png" alt="System Variables slide summary" width="900"/>
+</p>
+
+<hr/>
+
+<h2>The <code>register</code> Keyword</h2>
+
+<p><b>Goal:</b> Capture command or module output into a variable you can reuse later in the play.</p>
+
+<p><code>register</code> doesn’t define a static variable like <code>vars</code> — it stores live data generated by a task. Think of it as “recording the result.”  
+This lets me react to facts discovered during runtime instead of hardcoding values.</p>
+
+<h3>Example</h3>
+
+<pre><code>---
+- hosts: all
+  tasks:
+    - name: check uptime
+      ansible.builtin.command: uptime
+      register: uptime_result
+
+    - name: print the uptime output
+      ansible.builtin.debug:
+        msg: "Uptime info: {{ uptime_result.stdout }}"
+</code></pre>
+
+<h3>What happens</h3>
+<ul>
+  <li><b>First task:</b> runs the <code>uptime</code> command and saves its entire JSON-like result in <code>uptime_result</code>.</li>
+  <li><b>Second task:</b> accesses <code>uptime_result.stdout</code> (standard output) and displays it with <code>debug</code>.</li>
+</ul>
+
+<h3>Useful fields in a registered variable</h3>
+<ul>
+  <li><code>stdout</code> — plain text output of the command.</li>
+  <li><code>stderr</code> — any error output.</li>
+  <li><code>rc</code> — return code (0 = success).</li>
+  <li><code>changed</code> — boolean; true if Ansible detected a change.</li>
+  <li><code>cmd</code> — the command line that was executed.</li>
+</ul>
+
+<h3>Why it matters for Lesson 5</h3>
+<ul>
+  <li><b>register</b> is dynamic: variables are created at runtime, unlike those in <code>group_vars</code> or <code>host_vars</code>.</li>
+  <li>Great for proofs and conditional logic, like skipping tasks if <code>rc != 0</code> or only continuing on specific outputs.</li>
+  <li>Registered data can be referenced in later plays — for example, verifying idempotency or collecting reports.</li>
+</ul>
+
+<p align="center">
+  <img src="docs/img/lesson5-register-example.png" alt="Register variable example: capturing and printing command output" width="900"/>
+</p>
+
+<hr/>
+
+<h2>Ansible Vault (Protect Sensitive Data)</h2>
+
+<p><b>Goal:</b> Secure passwords, tokens, and private variables so they are safe in Git but still usable in playbooks.</p>
+
+<p><b>Idea:</b> Anything confidential should never live in plain text. <code>ansible-vault</code> lets me encrypt YAML files so that even if someone opens the repo, they can’t read the secrets without the password.</p>
+
+<h3>Vault Basics</h3>
+<ul>
+  <li><code>ansible-vault create secret.yml</code> — make a new encrypted file and edit it directly.</li>
+  <li><code>ansible-vault edit secret.yml</code> — safely open an existing vault for changes.</li>
+  <li><code>ansible-vault view secret.yml</code> — read it (still prompts for password).</li>
+  <li><code>ansible-vault encrypt vars.yml</code> — encrypt an existing file.</li>
+  <li><code>ansible-vault decrypt vars.yml</code> — decrypt a file (back to plain text).</li>
+</ul>
+
+<h3>Using Vaulted Files in Playbooks</h3>
+<pre><code>---
+- hosts: all
+  vars_files:
+    - secret.yml
+  tasks:
+    - name: show vault variable
+      ansible.builtin.debug:
+        msg: "The API key is {{ api_key }}"
+</code></pre>
+
+<p><b>Run command (prompts for password):</b></p>
+<pre><code>ansible-playbook playbooks/secure.yml --ask-vault-pass
+</code></pre>
+
+<p><b>Alternative (for automation):</b></p>
+<pre><code>ansible-playbook playbooks/secure.yml --vault-password-file ~/.vault_pass.txt
+</code></pre>
+
+<h3>Quick Facts (Exam-Ready)</h3>
+<ul>
+  <li>Vault protects entire files, not individual variables.</li>
+  <li>You can encrypt any YAML file used in playbooks — typically <code>vars/</code> or <code>group_vars/</code> files.</li>
+  <li>Multiple vaults can exist in one project, each with its own password.</li>
+  <li>Vaulted files can be shared safely on GitHub if the password is stored securely elsewhere.</li>
+  <li>Always re-run <code>--ask-vault-pass</code> if you see a “Decryption failed” message — it means the wrong password was supplied.</li>
+  <li>Vault passwords can be rotated using <code>ansible-vault rekey file.yml</code>.</li>
+</ul>
+
+<h3>Why Vault matters for the exam</h3>
+<ul>
+  <li>You must know how to:
+    <ul>
+      <li>Create a vault file.</li>
+      <li>Use it in a playbook.</li>
+      <li>Decrypt or edit it as needed.</li>
+    </ul>
+  </li>
+  <li>Remember: <code>ansible-vault create</code> + <code>--ask-vault-pass</code> are the most common exam tasks.</li>
+  <li>Vault ensures your repo can be public without exposing secrets — essential for production automation and Git hygiene.</li>
+</ul>
+
+<p align="center">
+  <img src="docs/img/lesson5-ansible-vault-slide.png" alt="Ansible Vault overview slide" width="900"/>
+</p>
+
+
