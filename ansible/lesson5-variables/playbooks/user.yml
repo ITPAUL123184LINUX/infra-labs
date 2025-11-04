@@ -1,8 +1,20 @@
 ---
 - name: create a user using a variable
   hosts: ansible3
+  become: yes 
+  
   vars_files:
-    - ../vault/vault 
-  tasks:
-    - name: generating encrypted password 
-      shell: echo {{ pwhash }} | passwd --stdin {{ user }}
+    - ../vars/users.yml
+    - ../vault/vault_pass.yml
+
+  tasks: 
+    - name: show variables before creating the user 
+      debug: 
+        msg: 
+          - "User to be created: {{ user }}"
+          - "Password from vault: {{ pwhash }}"
+
+    - name: create user "{{ user }}"
+      user: 
+        name: "{{ user }}"
+        password: "{{ pwhash }}"
