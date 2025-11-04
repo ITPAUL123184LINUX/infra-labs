@@ -1,0 +1,11 @@
+---
+- name: Create a test file on all managed nodes
+  hosts: managed
+  become: true
+  tasks:
+    - name: Ensure /tmp/lesson4_success.txt exists
+      ansible.builtin.copy:
+        dest: /tmp/lesson4_success.txt
+        content: "Automation complete — Lesson 4 successful!\n"
+        mode: '0644'
+
