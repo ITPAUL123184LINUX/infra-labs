@@ -312,4 +312,57 @@ This lets me react to facts discovered during runtime instead of hardcoding valu
   <img src="docs/img/lesson5-ansible-vault-slide.png" alt="Ansible Vault overview slide" width="900"/>
 </p>
 
+<hr/>
+
+<h2>Test Your Knowledge – Lesson 5</h2>
+
+<ol>
+  <li>What’s the difference between <code>vars</code> and <code>vars_files</code> in Ansible?</li>
+  <li>Where should host-specific data live versus global defaults?</li>
+  <li>When defining variables in YAML, when must you wrap them in double curly braces?</li>
+  <li>Why must secrets be encrypted separately with Ansible Vault?</li>
+  <li>What happens if you run a playbook and see “Decryption failed (no vault secrets found)”? Explain how to fix it.</li>
+</ol>
+
+<hr/>
+
+<h2>Lab 5 – Using Ansible Vault (Completed)</h2>
+
+<p><b>Goal:</b> Create a user where the username is plain and the password is vaulted.</p>
+
+<pre><code>project/
+├── playbooks/
+│   └── user.yml
+├── vars/
+│   └── users.yml          # user: harry
+├── vault/
+│   └── vault_pass.yml     # pwhash: myStrongPassword123 (encrypted)
+└── inventory.ini
+</code></pre>
+
+<h3>Playbook</h3>
+<pre><code>---
+- name: create a user using a variable
+  hosts: ansible3
+  become: yes
+  vars_files:
+    - ../vars/users.yml
+    - ../vault/vault_pass.yml
+  tasks:
+    - name: show variables
+      debug:
+        msg:
+          - "User: {{ user }}"
+          - "Password from vault: {{ pwhash }}"
+    - name: create user {{ user }}
+      user:
+        name: "{{ user }}"
+        password: "{{ pwhash }}"
+</code></pre>
+
+<h3>Run Proof</h3>
+<pre><code>ansible-playbook playbooks/user.yml -i inventory.ini --ask-vault-pass</code></pre>
+<p>Output shows “User to be created: harry” and creates the account on ansible3 — vault decrypted successfully.</p>
+
+
 
