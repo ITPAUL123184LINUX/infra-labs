@@ -16,21 +16,93 @@
 <hr/>
 
 <h2>6.1 Understanding Facts</h2>
+<p>
+Ansible <b>facts</b> are automatically gathered variables that describe a host’s system information.  
+They’re discovered when a play begins using the <code>setup</code> module.
+</p>
+
 <ul>
-  <li>Facts are key-value data that describe each host (OS, network, CPU, memory, etc.).</li>
-  <li>They’re gathered automatically at the start of a play via <code>setup</code> module.</li>
-  <li>They live in <code>ansible_facts</code> — a large dictionary available to every task.</li>
-  <li>You can disable gathering with <code>gather_facts: no</code> for faster runs.</li>
+  <li>Facts contain host data like memory, IP, OS, and hardware details.</li>
+  <li>Stored in a dictionary called <code>ansible_facts</code>.</li>
+  <li>Useful for making plays dynamic (no hardcoded values).</li>
+  <li>Examples: <code>ansible_facts.default_ipv4.address</code>, <code>ansible_facts.memtotal_mb</code>, <code>ansible_facts.distribution</code>.</li>
 </ul>
 
-<pre><code>ansible all -m ansible.builtin.setup | head -n 25</code></pre>
+<p><b>Example:</b></p>
 
-<p><b>Shortcut:</b> See a single fact:</p>
-<pre><code>ansible all -m ansible.builtin.setup -a 'filter=ansible_hostname' -o</code></pre>
+<pre><code>---
+- hosts: all
+  gather_facts: yes
+  tasks:
+    - name: show IP address
+      debug:
+        msg: "This host uses IP address {{ ansible_facts.default_ipv4.address }}"
+</code></pre>
+
+<p><b>Output Example:</b></p>
+<pre><code>
+TASK [show IP address] **********************************
+ok: [ansible1] => "This host uses IP address 172.20.10.5"
+ok: [ansible2] => "This host uses IP address 172.20.10.6"
+ok: [ansible3] => "This host uses IP address 172.20.10.4"
+</code></pre>
+
+<p align="center">
+  <img src="docs/img/6.1ipfacts.yml.PNG" width="700"><br>
+  <img src="docs/img/6.1ipfacts-output.PNG" width="900">
+</p>
 
 <hr/>
 
-<h2>6.2 Using Multi-Tier Variables</h2>
+<h2>6.2 Managing Fact Gathering</h2>
+
+<ul>
+  <li>By default, Ansible gathers facts automatically before running tasks.</li>
+  <li>Disable it to speed things up:
+    <pre><code>gather_facts: no</code></pre>
+  </li>
+  <li>Even if disabled, you can re-gather with the <code>setup</code> module:
+    <pre><code>ansible all -m ansible.builtin.setup -a 'filter=ansible_hostname' -o</code></pre>
+  </li>
+  <li>View all host data with:
+    <pre><code>ansible all -m ansible.builtin.setup | head -n 25</code></pre>
+  </li>
+  <li>Facts follow a dotted hierarchy — like <code>ansible_facts.default_ipv4.address</code> — meaning you can drill into nested data.</li>
+</ul>
+
+<p align="center">
+  <img src="docs/img/6.1P2.PNG" width="900">
+</p>
+
+<p><b>Tip:</b> Use <code>debug</code> to display any single fact for clarity:</p>
+<pre><code>- debug:
+    msg: "OS family is {{ ansible_facts.os_family }}"
+</code></pre>
+
+<hr/>
+
+<h2>6.3 Troubleshooting Slow Fact Collection</h2>
+
+<ul>
+  <li>Fact gathering can slow down large environments or misconfigured networks.</li>
+  <li>Solutions:
+    <ul>
+      <li>Enable <b>fact caching</b> to reuse facts between runs.</li>
+      <li>Ensure proper <b>hostname resolution</b> — each host must resolve the others.</li>
+      <li>Maintain consistent <code>/etc/hosts</code> entries across all managed nodes.</li>
+    </ul>
+  </li>
+</ul>
+
+<p align="center">
+  <img src="docs/img/6.1P3.PNG" width="900">
+</p>
+
+<p><b>Exam Insight:</b> If your plays take too long on “Gathering Facts,” check SSH connectivity and name resolution first.</p>
+
+<hr/>
+
+<h2>6.4 Using Multi-Tier Variables</h2>
 <p>Ansible merges variables from multiple levels (global → group → host → task). Facts live near the top in precedence order.</p>
 <ul>
   <li>Playbook vars override gathered facts only temporarily.</li>
@@ -39,7 +111,7 @@
 
 <hr/>
 
-<h2>6.3 Dictionaries and Arrays</h2>
+<h2>6.5 Dictionaries and Arrays</h2>
 <p>Facts are stored as nested dictionaries (YAML = JSON). Access keys with dot or bracket notation.</p>
 
 <pre><code>{{ ansible_facts['default_ipv4']['address'] }}
@@ -50,7 +122,7 @@
 
 <hr/>
 
-<h2>6.4 Defining Custom Facts</h2>
+<h2>6.6 Defining Custom Facts</h2>
 <ul>
   <li>Create files under <code>/etc/ansible/facts.d/</code> on managed nodes.</li>
   <li>Each file must end with <code>.fact</code> and contain INI or JSON data.</li>
@@ -68,7 +140,7 @@ tier=web
 
 <hr/>
 
-<h2>6.5 Variable Precedence Refresher</h2>
+<h2>6.7 Variable Precedence Refresher</h2>
 <ul>
   <li>Most specific wins.</li>
   <li>Order: <b>CLI -e</b> → <b>Play vars</b> → <b>Host vars</b> → <b>Group vars</b> → <b>Facts</b> → <b>Defaults</b>.</li>
@@ -107,8 +179,7 @@ tier=web
   <li>Recognize <code>ansible_facts</code> as read-only host data.</li>
   <li>Define and reference <code>ansible_local</code> custom facts.</li>
   <li>Understand variable precedence order.</li>
-  <li>Facts help make plays dynamic — vital for configuration targeting and conditionals.</li>
+  <li>Facts make plays adaptive — vital for targeting, templating, and conditional logic.</li>
 </ul>
 
 <i>End of Lesson 6 notes</i>
-
