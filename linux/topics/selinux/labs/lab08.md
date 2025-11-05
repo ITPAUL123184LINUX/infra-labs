@@ -1,4 +1,4 @@
-# SELINUX • Lab 08
+# selinux — Lab 08
 ## Goal
 ## Steps
 ## Expected Output

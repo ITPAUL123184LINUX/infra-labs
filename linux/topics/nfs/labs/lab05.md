@@ -1,4 +1,4 @@
-# NFS • Lab 05
+# nfs — Lab 05
 ## Goal
 ## Steps
 ## Expected Output

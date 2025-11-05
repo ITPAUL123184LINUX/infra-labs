@@ -1,4 +1,4 @@
-# HOSTNAME-RESOLUTION • Lab 07
+# hostname /resolution — Lab 07
 ## Goal
 ## Steps
 ## Expected Output

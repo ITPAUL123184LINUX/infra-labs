@@ -1,4 +1,4 @@
-# SELINUX • Lab 06
+# selinux — Lab 06
 ## Goal
 ## Steps
 ## Expected Output

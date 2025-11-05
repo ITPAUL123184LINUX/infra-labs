@@ -1,4 +1,4 @@
-# BOOTLOADER • Lab 10
+# bootloader — Lab 10
 ## Goal
 ## Steps
 ## Expected Output

@@ -1,4 +1,4 @@
-# BOOTLOADER • Lab 08
+# bootloader — Lab 08
 ## Goal
 ## Steps
 ## Expected Output
