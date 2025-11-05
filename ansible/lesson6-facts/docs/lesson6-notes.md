@@ -29,27 +29,9 @@ They’re discovered when a play begins using the <code>setup</code> module.
 </ul>
 
 <p><b>Example:</b></p>
-
-<pre><code>---
-- hosts: all
-  gather_facts: yes
-  tasks:
-    - name: show IP address
-      debug:
-        msg: "This host uses IP address {{ ansible_facts.default_ipv4.address }}"
-</code></pre>
-
-<p><b>Output Example:</b></p>
-<pre><code>
-TASK [show IP address] **********************************
-ok: [ansible1] => "This host uses IP address 172.20.10.5"
-ok: [ansible2] => "This host uses IP address 172.20.10.6"
-ok: [ansible3] => "This host uses IP address 172.20.10.4"
-</code></pre>
-
 <p align="center">
-  <img src="docs/img/6.1ipfacts.yml.PNG" width="700"><br>
-  <img src="docs/img/6.1ipfacts-output.PNG" width="900">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.1ipfacts.yml.PNG"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.1ipfacts-output.PNG">
 </p>
 
 <hr/>
