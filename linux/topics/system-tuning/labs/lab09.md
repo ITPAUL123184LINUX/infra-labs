@@ -1,4 +1,4 @@
-# SYSTEM-TUNING • Lab 09
+# system /tuning — Lab 09
 ## Goal
 ## Steps
 ## Expected Output

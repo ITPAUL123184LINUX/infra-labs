@@ -1,4 +1,4 @@
-# SELINUX • Lab 09
+# selinux — Lab 09
 ## Goal
 ## Steps
 ## Expected Output

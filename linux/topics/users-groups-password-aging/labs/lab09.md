@@ -1,4 +1,4 @@
-# USERS-GROUPS-PASSWORD-AGING • Lab 09
+# users /groups /password /aging — Lab 09
 ## Goal
 ## Steps
 ## Expected Output

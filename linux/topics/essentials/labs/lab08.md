@@ -1,4 +1,4 @@
-# ESSENTIALS • Lab 08
+# essentials — Lab 08
 ## Goal
 ## Steps
 ## Expected Output

@@ -1,4 +1,4 @@
-# BOOTLOADER • Lab 07
+# bootloader — Lab 07
 ## Goal
 ## Steps
 ## Expected Output

@@ -1,4 +1,4 @@
-# ESSENTIALS • Lab 09
+# essentials — Lab 09
 ## Goal
 ## Steps
 ## Expected Output

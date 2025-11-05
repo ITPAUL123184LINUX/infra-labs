@@ -1,4 +1,4 @@
-# AUTOFS • Lab 09
+# autofs — Lab 09
 ## Goal
 ## Steps
 ## Expected Output

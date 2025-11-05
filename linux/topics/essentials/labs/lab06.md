@@ -1,4 +1,4 @@
-# ESSENTIALS • Lab 06
+# essentials — Lab 06
 ## Goal
 ## Steps
 ## Expected Output

@@ -1,4 +1,4 @@
-# NFS • Lab 08
+# nfs — Lab 08
 ## Goal
 ## Steps
 ## Expected Output

@@ -1,4 +1,4 @@
-# ESSENTIALS • Lab 04
+# essentials — Lab 04
 ## Goal
 ## Steps
 ## Expected Output

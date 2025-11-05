@@ -1,4 +1,4 @@
-# ESSENTIALS • Lab 07
+# essentials — Lab 07
 ## Goal
 ## Steps
 ## Expected Output
