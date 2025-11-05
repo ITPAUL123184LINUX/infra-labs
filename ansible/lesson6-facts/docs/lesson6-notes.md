@@ -53,7 +53,7 @@ They’re discovered when a play begins using the <code>setup</code> module.
 </ul>
 
 <p align="center">
-  <img src="docs/img/6.1P2.PNG" width="900">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.1P2.PNG" width="900">
 </p>
 
 <p><b>Tip:</b> Use <code>debug</code> to display any single fact for clarity:</p>
@@ -77,7 +77,7 @@ They’re discovered when a play begins using the <code>setup</code> module.
 </ul>
 
 <p align="center">
-  <img src="docs/img/6.1P3.PNG" width="900">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.1P3.PNG" width="900">
 </p>
 
 <p><b>Exam Insight:</b> If your plays take too long on “Gathering Facts,” check SSH connectivity and name resolution first.</p>
@@ -93,14 +93,81 @@ They’re discovered when a play begins using the <code>setup</code> module.
 
 <hr/>
 
-<h2>6.5 Dictionaries and Arrays</h2>
-<p>Facts are stored as nested dictionaries (YAML = JSON). Access keys with dot or bracket notation.</p>
+<h2>6.5 Dictionaries and Arrays (Deep Dive)</h2>
+<p>
+Multi-valued variables in Ansible can be expressed as <b>lists</b> (arrays) or <b>dictionaries</b> (hashes).  
+Facts themselves are stored as dictionaries, while lists are often used for loops.
+</p>
 
-<pre><code>{{ ansible_facts['default_ipv4']['address'] }}
-{{ ansible_facts.os_family }}
+<ul>
+  <li><b>Dictionary:</b> An unordered key-value structure (<code>{ }</code>) — like <code>ansible_facts</code>.</li>
+  <li><b>Array/List:</b> An ordered collection (<code>[ ]</code>) — often used with <code>loop:</code> or <code>with_items:</code>.</li>
+  <li><b>Strings:</b> Plain values wrapped in quotes (<code>" "</code>).</li>
+</ul>
+
+<p align="center">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p2.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p3.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p4.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p5.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p6.PNG" width="800"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.3p7.PNG" width="800">
+</p>
+
+<p><b>Dictionary example:</b></p>
+<pre><code>users:
+  linda:
+    username: linda
+    shell: /bin/bash
+  lisa:
+    username: lisa
+    shell: /bin/sh
 </code></pre>
 
-<p><b>Why:</b> Needed when looping or templating dynamic data from hosts.</p>
+<p>or equivalently:</p>
+<pre><code>users:
+  linda: { username: 'linda', shell: '/bin/bash' }
+  lisa:  { username: 'lisa',  shell: '/bin/sh' }
+</code></pre>
+
+<p><b>How to access dictionary values:</b></p>
+<pre><code>{{ users['linda']['shell'] }}
+{{ users.linda.shell }}
+</code></pre>
+
+<p><b>Recognizing structures in output:</b></p>
+<ul>
+  <li><code>[ ]</code> → List (array)</li>
+  <li><code>{ }</code> → Dictionary (key-value pairs)</li>
+  <li><code>" "</code> → String</li>
+</ul>
+
+<hr/>
+
+<h2>Lesson 6 Lab – Dictionaries vs Arrays</h2>
+
+<p>Below, two playbooks demonstrate the difference between arrays (lists) and dictionaries (hashes):</p>
+
+<h3>Dictionary Example</h3>
+<p><b>Playbook:</b></p>
+<p align="center">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/multi-dictionary.yml.PNG" width="700"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/multi-dictionary-output.PNG" width="900">
+</p>
+
+<h3>Array Example</h3>
+<p><b>Playbook:</b></p>
+<p align="center">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/multi-list.yml.PNG" width="700"><br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/multi-list.ymloutpt.PNG" width="900">
+</p>
+
+<p><b>Output Summary:</b></p>
+<ul>
+  <li>Lists are perfect for looping through multiple objects.</li>
+  <li>Dictionaries are best when you want structured, named data (like host facts).</li>
+</ul>
 
 <hr/>
 
@@ -116,52 +183,4 @@ site=datacenter1
 tier=web
 </code></pre>
 
-<pre><code>ansible all -m ansible.builtin.setup -a 'filter=ansible_local' -o</code></pre>
-
-<p><b>Result:</b> Accessible via <code>{{ ansible_local.localinfo.site }}</code></p>
-
-<hr/>
-
-<h2>6.7 Variable Precedence Refresher</h2>
-<ul>
-  <li>Most specific wins.</li>
-  <li>Order: <b>CLI -e</b> → <b>Play vars</b> → <b>Host vars</b> → <b>Group vars</b> → <b>Facts</b> → <b>Defaults</b>.</li>
-  <li>Facts can be overridden but only in memory — not permanently.</li>
-</ul>
-
-<hr/>
-
-<h2>Lesson 6 Lab – Working with Facts</h2>
-
-<pre><code>---
-- name: demo facts
-  hosts: all
-  tasks:
-    - name: print hostname and IP
-      ansible.builtin.debug:
-        msg: "Host {{ ansible_hostname }} has IP {{ ansible_default_ipv4.address }}"
-
-    - name: save facts to file
-      ansible.builtin.copy:
-        dest: "/tmp/{{ inventory_hostname }}_facts.txt"
-        content: "{{ ansible_facts | to_nice_json }}"
-</code></pre>
-
-<p><b>Expected:</b> Each managed node prints its own data and saves a local JSON fact file.</p>
-
-<p align="center">
-  <img src="docs/img/lesson6-facts-lab.png" alt="Lesson 6 facts lab output" width="900"/>
-</p>
-
-<hr/>
-
-<h2>Exam Focus Tips</h2>
-<ul>
-  <li>Know how to gather and filter facts with <code>setup</code>.</li>
-  <li>Recognize <code>ansible_facts</code> as read-only host data.</li>
-  <li>Define and reference <code>ansible_local</code> custom facts.</li>
-  <li>Understand variable precedence order.</li>
-  <li>Facts make plays adaptive — vital for targeting, templating, and conditional logic.</li>
-</ul>
-
-<i>End of Lesson 6 notes</i>
+<pre><code>ansible all -m ansible.builtin.setup -a 'filter=ansible_local' -o</co_
