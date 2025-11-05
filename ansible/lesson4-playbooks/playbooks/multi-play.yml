@@ -1,0 +1,19 @@
+---
+- name: Configure users
+  hosts: managed
+  become: true
+  tasks:
+    - name: Create user lesson4b
+      ansible.builtin.user:
+        name: lesson4b
+        state: present
+
+- name: Deploy MOTD banner
+  hosts: managed
+  become: true
+  tasks:
+    - name: Copy banner
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: "Configured by Lesson 4 Multi-Play Example"
+
