@@ -84,54 +84,63 @@ through both structured YAML understanding and real-world automation use cases.<
 ---
 
 <h2>4.4 Using Multiple-Play Playbooks</h2>
-<pre><code>---
-- name: Configure users
-  hosts: managed
-  become: true
-  tasks:
-    - name: Create user lesson4a
-      ansible.builtin.user:
-        name: lesson4a
-        state: present
+<p align="center">
+  <br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/multi-play.yml.PNG"/>
+</p>
 
-- name: Deploy MOTD banner
-  hosts: managed
-  become: true
-  tasks:
-    - name: Copy banner
-      ansible.builtin.copy:
-        dest: /etc/motd
-        content: "Managed by Lesson 4 Playbook"
-</code></pre>
+<p align="center">
+  <br>
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/multi-play.yml-otpt.PNG"/>
+</p>
 
 <ul>
-  <li><b>Concept:</b> Multiple plays allow complex automation flows in one file, targeting different hosts or performing sequential roles.</li>
-  <li><b>Verification:</b>
-  <pre><code>ansible all -m ansible.builtin.user -a 'name=lesson4a' -o
+  <li><b>Concept:</b> This multi-play playbook demonstrates how to execute multiple automation stages sequentially in one file. 
+  Each play defines its own hosts, privilege level, and task list. The first creates a user (<code>lesson4b</code>), the second deploys a customized 
+  Message of the Day banner.</li>
+
+  <li><b>Verification Commands:</b>
+  <pre><code>ansible all -m ansible.builtin.user -a 'name=lesson4b' -o
 ansible all -a 'cat /etc/motd' -o
-</code></pre>
-  </li>
+</code></pre></li>
+
+  <li><b>Expected Output:</b> Each node has the <code>lesson4b</code> user and displays the MOTD banner text “Configured by Lesson 4 Multi-Play Example.”</li>
+
+  <p align="center">
+    <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/docs/screenshots/multi-list.verify.PNG"/>
+  </p>
 </ul>
 
 ---
 
-<h2>📘 Real-World Projects (10 Playbooks)</h2>
+<h2>📘 Playbook Projects (10 Playbooks)</h2>
 
-<p>Below are the 10 playbook projects that will build on Sander’s concepts, demonstrating real-world system automation, idempotency, and RHCE-grade logic.</p>
+<p>Below are the 10 playbook projects — each one links directly to its corresponding YAML file on GitHub for instant reference and execution.</p>
 
 <!-- START: Playbook Index -->
 <table>
 <tr><th>#</th><th>Playbook</th><th>Description</th></tr>
-<tr><td>1</td><td><code>01_user_mgmt.yml</code></td><td>Users, groups, SSH keys</td></tr>
-<tr><td>2</td><td><code>02_firewalld_rules.yml</code></td><td>Zones, ports, rich rules</td></tr>
-<tr><td>3</td><td><code>03_package_mgmt.yml</code></td><td>Install/update/remove packages</td></tr>
-<tr><td>4</td><td><code>04_motd_banner.yml</code></td><td>Jinja2 MOTD</td></tr>
-<tr><td>5</td><td><code>05_multi_service.yml</code></td><td>Apache + MariaDB (multi-play)</td></tr>
-<tr><td>6</td><td><code>06_wireguard_setup.yml</code></td><td>WireGuard VPN</td></tr>
-<tr><td>7</td><td><code>07_backup_etc.yml</code></td><td>Timestamped /etc backup</td></tr>
-<tr><td>8</td><td><code>08_monitor_agent.yml</code></td><td>node_exporter</td></tr>
-<tr><td>9</td><td><code>09_harden_ssh.yml</code></td><td>SSH hardening</td></tr>
-<tr><td>10</td><td><code>10_local_repo.yml</code></td><td>Local DNF repo</td></tr>
+
+<tr><td>1</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/01_user_mgmt.yml" target="_blank"><code>01_user_mgmt.yml</code></a></td><td>Users, groups, SSH keys</td></tr>
+
+<tr><td>2</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/02_firewalld_rules.yml" target="_blank"><code>02_firewalld_rules.yml</code></a></td><td>Zones, ports, rich rules</td></tr>
+
+<tr><td>3</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/03_package_mgmt.yml" target="_blank"><code>03_package_mgmt.yml</code></a></td><td>Install/update/remove packages</td></tr>
+
+<tr><td>4</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/04_motd_banner.yml" target="_blank"><code>04_motd_banner.yml</code></a></td><td>Jinja2 MOTD</td></tr>
+
+<tr><td>5</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/05_multi_service.yml" target="_blank"><code>05_multi_service.yml</code></a></td><td>Apache + MariaDB (multi-play)</td></tr>
+
+<tr><td>6</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/06_wireguard_setup.yml" target="_blank"><code>06_wireguard_setup.yml</code></a></td><td>WireGuard VPN</td></tr>
+
+<tr><td>7</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/07_backup_etc.yml" target="_blank"><code>07_backup_etc.yml</code></a></td><td>Timestamped /etc backup</td></tr>
+
+<tr><td>8</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/08_monitor_agent.yml" target="_blank"><code>08_monitor_agent.yml</code></a></td><td>node_exporter</td></tr>
+
+<tr><td>9</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/09_harden_ssh.yml" target="_blank"><code>09_harden_ssh.yml</code></a></td><td>SSH hardening</td></tr>
+
+<tr><td>10</td><td><a href="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson4-playbooks/playbooks/10_local_repo.yml" target="_blank"><code>10_local_repo.yml</code></a></td><td>Local DNF repo</td></tr>
+
 </table>
 <!-- END: Playbook Index -->
 
@@ -139,4 +148,3 @@ ansible all -a 'cat /etc/motd' -o
 
 <h3>Next Step:</h3>
 <p>Begin with Playbook #1 (<code>01_user_mgmt.yml</code>) — build, run, verify, and document all outputs. Capture every <code>tree -L 2</code> and <code>ansible-playbook</code> result as proof-of-work.</p>
-
