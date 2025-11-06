@@ -146,5 +146,3 @@ ansible all -a 'cat /etc/motd' -o
 
 ---
 
-<h3>Next Step:</h3>
-<p>Begin with Playbook #1 (<code>01_user_mgmt.yml</code>) — build, run, verify, and document all outputs. Capture every <code>tree -L 2</code> and <code>ansible-playbook</code> result as proof-of-work.</p>
