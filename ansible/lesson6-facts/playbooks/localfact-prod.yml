@@ -1,0 +1,19 @@
+---
+  - name: Create a custom and local fact on ansible1
+    hosts: ansible1
+    become: true 
+    tasks: 
+      - name: Ensure facts directory exists
+        ansible.builtin.file:
+          path: /etc/ansible/facts.d 
+          state: directory
+          mode: '0755'
+
+
+      - name: Create the custom fact file
+        ansible.builtin.copy: 
+          dest: /etc/ansible/facts.d/custom.fact
+          content: |
+            [general]
+            type=production
+          mode: '0644' 

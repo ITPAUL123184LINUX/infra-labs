@@ -1,0 +1,27 @@
+---
+- name: Ensure SSHD supports SFTP and restart service
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Ensure SFTP subsystem line exists in sshd_config
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Subsystem sftp'
+        line: 'Subsystem sftp /usr/libexec/openssh/sftp-server'
+        state: present
+        backup: yes
+
+    - name: Ensure ansible user is allowed to connect
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AllowUsers'
+        line: 'AllowUsers ansible'
+        state: present
+        backup: yes
+
+    - name: Restart SSHD service
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+
