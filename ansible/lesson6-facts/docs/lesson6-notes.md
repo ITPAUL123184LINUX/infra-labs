@@ -197,14 +197,6 @@ They live <b>on the managed node</b> inside <code>/etc/ansible/facts.d/</code> a
   <li><b>Each section</b> inside the file needs a label (e.g., <code>[software]</code>).</li>
 </ul>
 
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.4.PNG" width="850"><br>
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.4newlocalfacts.yml.PNG" width="850"><br>
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.4newlocalfacts.ymloutpt.PNG" width="850"><br>
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.4 localfacts-verify.PNG" width="850"><br>
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson6-facts/docs/img/6.4p2.PNG" width="850">
-</p>
-
 <h3>Example – Installing and Verifying Custom Facts</h3>
 
 <pre><code>---
@@ -256,12 +248,95 @@ When you gather facts, Ansible pulls both — but custom facts are like tattoos 
 
 <hr/>
 
-<h2>Exam Focus Tips</h2>
+<h2>6.9 Understanding Variable Scope & Precedence (Screenshots Summary)</h2>
+
+<p>
+This section connects variables, facts, and how Ansible decides which value wins when conflicts occur.
+</p>
+
+<h3>Variable Scope</h3>
 <ul>
-  <li>Memorize variable precedence and where facts fit in.</li>
-  <li>Know how to gather, filter, and display both system and custom facts.</li>
-  <li>Understand the difference between <code>ansible_facts.local</code> and <code>ansible_facts.ansible_local</code>.</li>
-  <li>Be ready to show or use custom facts dynamically in playbooks.</li>
+  <li>Variables exist only within the play or file they’re defined.</li>
+  <li>They can come from:
+    <ul>
+      <li>Inventory or host/group vars</li>
+      <li>Playbooks via <code>vars:</code></li>
+      <li>Modules like <code>set_fact</code> or <code>include_vars</code></li>
+    </ul>
+  </li>
+  <li><code>hostvars[]</code> lets one host read another host’s vars.</li>
+  <li><b>Extra vars (-e)</b> override everything else.</li>
 </ul>
 
-<i>End of Lesson 6 notes (final version)</i>
+<h3>Variable Precedence</h3>
+<ul>
+  <li>More specific definitions override broader ones.</li>
+  <li>Order of priority (lowest → highest):</li>
+</ul>
+
+<pre><code>1. Role defaults  
+2. Inventory variables  
+3. Host facts  
+4. Play variables  
+5. Included play variables  
+6. Task variables  
+7. Extra vars (-e)
+</code></pre>
+
+<p><b>Rule:</b> The variable closest to the task wins.</p>
+
+<h3>Lesson 6 Lab – Creating and Validating Local Facts</h3>
+
+<p>
+This lab demonstrates scope, precedence, and local facts in action.
+</p>
+
+<pre><code>---
+- name: Create a custom and local fact on ansible1
+  hosts: ansible1
+  become: true
+  tasks:
+    - name: Ensure facts directory exists
+      ansible.builtin.file:
+        path: /etc/ansible/facts.d
+        state: directory
+        mode: '0755'
+
+    - name: Create the custom fact file
+      ansible.builtin.copy:
+        dest: /etc/ansible/facts.d/custom.fact
+        content: |
+          [general]
+          type=production
+        mode: '0644'
+</code></pre>
+
+<h4>Verification</h4>
+<pre><code>ansible ansible1 -m ansible.builtin.setup -a "filter=ansible_local"
+</code></pre>
+
+<p><b>Result:</b> The fact <code>type=production</code> appears under <code>ansible_local.general</code>.</p>
+
+<h3>Key Takeaways</h3>
+<ul>
+  <li><b>Scope</b> decides where variables are visible.</li>
+  <li><b>Precedence</b> decides which one wins.</li>
+  <li>Facts act like automatically collected host variables.</li>
+  <li>Custom facts stay stored on the managed host itself.</li>
+</ul>
+
+<p><b>Simplified Insight:</b>  
+Playbook vars are short-lived. Inventory vars are reusable. Custom facts are permanent metadata.  
+When conflicts occur, the most specific variable always wins.</p>
+
+<hr/>
+
+<h2>Exam Focus Tips</h2>
+<ul>
+  <li>Know where facts live and how to display them.</li>
+  <li>Memorize scope and precedence order.</li>
+  <li>Practice creating and verifying custom facts.</li>
+  <li>Understand how <code>-e</code> overrides everything.</li>
+</ul>
+
+<i>End of Lesson 6 notes (final version with Variable Scope & Precedence)</i>
