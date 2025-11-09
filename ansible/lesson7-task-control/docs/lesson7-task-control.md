@@ -260,10 +260,6 @@ They make playbooks cleaner and more reliable, especially when you want to contr
   <li>Note: <code>loop</code> can’t be used directly on blocks (only inside them).</li>
 </ul>
 
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.6.PNG" width="850">
-</p>
-
 <hr/>
 
 <h3>Using Blocks for Error Handling</h3>
@@ -291,31 +287,6 @@ and what to run every time, no matter what.
             cmd: echo "Play completed" >> /tmp/play.log
 </code></pre>
 
-<ul>
-  <li><b>block:</b> Main tasks you want to run.</li>
-  <li><b>rescue:</b> Backup plan if something fails.</li>
-  <li><b>always:</b> Cleanup or final steps that always run.</li>
-</ul>
-
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.6p1.PNG" width="850">
-</p>
-
-<hr/>
-
-<h3>Plain-English Summary</h3>
-<ul>
-  <li><b>block:</b> Main section to execute.</li>
-  <li><b>rescue:</b> What to do if the block fails.</li>
-  <li><b>always:</b> Always runs — success or fail.</li>
-  <li>One <code>when</code> can control all tasks in a block.</li>
-</ul>
-
-<p><b>Analogy:</b> Cooking dinner:  
-<b>block</b> is the meal plan,  
-<b>rescue</b> is ordering pizza if you burn it,  
-and <b>always</b> is cleaning up afterward no matter what.</p>
-
 <hr/>
 
 <h3>Lab Summary – Using Blocks</h3>
@@ -336,130 +307,95 @@ Even the best automation fails sometimes — and knowing how to control what hap
 Ansible gives you tools to manage errors gracefully, keep plays running, and decide what counts as “failed.”
 </p>
 
-<hr/>
-
-<h3>Understanding Failure Handling</h3>
-
 <ul>
-  <li>Every task returns an <b>exit status</b> (0 = success, non-zero = failure).</li>
-  <li>By default, if any task fails, Ansible <b>stops running on that host</b> and moves to the next one.</li>
-  <li>You can change this behavior with specific options:</li>
-  <ul>
-    <li><code>ignore_errors: yes</code> → Keep going even if the task fails.</li>
-    <li><code>force_handlers: true</code> → Make handlers run even if a previous task failed.</li>
-  </ul>
+  <li><b>ignore_errors:</b> continues even if a task fails.</li>
+  <li><b>force_handlers:</b> makes handlers run even after a failure.</li>
+  <li><b>failed_when:</b> defines what a “failure” really is.</li>
+  <li><b>fail:</b> stops the play on purpose with a clear message.</li>
 </ul>
 
-<p>
-<b>Example:</b> If both <code>ignore_errors: yes</code> and <code>force_handlers: no</code> are set,  
-the playbook keeps running but skips handlers that depend on failed tasks.
-</p>
-
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.7.PNG" width="850">
-</p>
-
 <hr/>
 
-<h3>Defining Failure States</h3>
+<h2>7.8 Managing Task Failure (Advanced)</h2>
 
 <p>
-Sometimes Ansible thinks a task succeeded just because it returned exit code 0 —  
-but maybe the output actually shows an error.  
-To fix that, use <code>failed_when</code> to define what failure really looks like.
+This section expands your control by teaching you how to handle and define task failures more precisely.  
+You’ll learn how to ignore specific errors, force certain tasks to still run, and create your own failure logic.
 </p>
 
-<pre><code>- name: Run a script and define custom failure
+<h3>1️⃣ Understanding Failure Behavior</h3>
+<ul>
+  <li>Ansible checks the <b>exit code</b> of each task (0 = success, anything else = failure).</li>
+  <li>If a task fails, Ansible stops running tasks on that host — unless told otherwise.</li>
+  <li>Use <code>ignore_errors: yes</code> to keep going after a failure.</li>
+  <li>Use <code>force_handlers: true</code> to ensure handlers still run even if something failed earlier.</li>
+</ul>
+
+<h3>2️⃣ Defining Custom Failure Conditions</h3>
+<pre><code>- name: Detect custom failure
   command: echo hello world
   ignore_errors: yes
-  register: command_result
-  failed_when: "'world' in command_result.stdout"
+  register: result
+  failed_when: "'world' in result.stdout"
 </code></pre>
 
-<ul>
-  <li><b>ignore_errors:</b> lets the play continue even if this fails.</li>
-  <li><b>register:</b> stores the task’s output for checking later.</li>
-  <li><b>failed_when:</b> looks for specific text or conditions to mark as failure.</li>
-</ul>
-
 <p>
-This lets you take full control — you define what “failed” means for your environment.
+Here, even though <code>echo</code> normally succeeds, we define a rule:  
+if the word “world” appears in the output, treat it as a failure.
 </p>
 
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.7P1.PNG" width="850">
-</p>
-
-<hr/>
-
-<h3>Using the Fail Module</h3>
-
-<p>
-The <code>fail</code> module lets you stop a play intentionally and show a custom error message.  
-Combine it with <code>failed_when</code> or <code>register</code> for precise logic.
-</p>
-
+<h3>3️⃣ Using the Fail Module</h3>
 <pre><code>- name: Example using fail module
-  shell: echo "Testing failure"
+  shell: echo "Checking something important"
   register: result
   ignore_errors: yes
 
-- name: Fail play if condition met
+- name: Stop play if issue found
   fail:
-    msg: "Custom failure detected!"
-  when: "'Testing' in result.stdout"
+    msg: "Custom failure triggered because output contained 'important'"
+  when: "'important' in result.stdout"
 </code></pre>
 
 <ul>
-  <li><b>fail:</b> prints your own failure message and stops the play.</li>
-  <li><b>ignore_errors:</b> lets you check output even after errors occur.</li>
-  <li>For <code>failed_when</code> or <code>fail</code>, the task’s output must be <b>registered</b> first.</li>
+  <li><code>fail</code> stops the play with your custom message.</li>
+  <li>Use <code>ignore_errors: yes</code> on earlier tasks so you can analyze results before failing.</li>
+  <li>Use <code>failed_when</code> for subtle logic, <code>fail</code> for hard stops.</li>
+</ul>
+
+<h3>4️⃣ Plain-English Summary</h3>
+<ul>
+  <li><b>ignore_errors:</b> skip errors, keep moving.</li>
+  <li><b>force_handlers:</b> force handlers to run even after errors.</li>
+  <li><b>failed_when:</b> define your own “fail” logic.</li>
+  <li><b>fail:</b> stop play intentionally, clearly.</li>
 </ul>
 
 <p>
-<b>Tip:</b> When using <code>fail</code>, ensure <code>ignore_errors: yes</code> is set on the task that’s being tested —  
-otherwise the play will stop before the fail logic runs.
-</p>
-
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.7p2.PNG" width="850">
+<b>Analogy:</b> Think of Ansible like a factory line —  
+<code>ignore_errors</code> keeps the line moving,  
+<code>failed_when</code> spots hidden issues,  
+and <code>fail</code> is the emergency stop switch when you detect something critical.
 </p>
 
 <hr/>
 
-<h3>Plain-English Summary</h3>
+<h3>Lab Summary – Managing Task Failure (Advanced)</h3>
 <ul>
-  <li><b>ignore_errors:</b> keeps the play going even if a task breaks.</li>
-  <li><b>force_handlers:</b> ensures handlers still run even after errors.</li>
-  <li><b>failed_when:</b> defines what “failure” actually means.</li>
-  <li><b>fail:</b> lets you end the play on purpose with a clear message.</li>
+  <li>Practiced using <code>ignore_errors</code> to bypass minor issues.</li>
+  <li>Used <code>force_handlers</code> to ensure cleanup still happens.</li>
+  <li>Defined and tested failure rules with <code>failed_when</code>.</li>
+  <li>Triggered manual stops with the <code>fail</code> module for control.</li>
 </ul>
 
-<p><b>Analogy:</b> Think of this like driving a car —  
-<b>ignore_errors</b> lets you keep going with a flat tire,  
-<b>failed_when</b> helps you spot hidden damage,  
-and <b>fail</b> is when you pull over safely before making things worse.</p>
-
-<hr/>
-
-<h3>Lab Summary – Managing Task Failure</h3>
-<ul>
-  <li>Used <code>ignore_errors</code> to continue after failed tasks.</li>
-  <li>Used <code>force_handlers</code> to trigger handlers even after errors.</li>
-  <li>Defined failure conditions with <code>failed_when</code>.</li>
-  <li>Used <code>fail</code> to print custom messages and stop plays safely.</li>
-</ul>
-
-<p><b>Key takeaway:</b> You control what counts as success or failure —  
-not Ansible. This makes automation flexible, predictable, and reliable.</p>
+<p><b>Key takeaway:</b> Mastering failure handling makes your automation resilient —  
+you decide what’s a problem, what isn’t, and how to recover cleanly every time.</p>
 
 <hr/>
 
 <h2>Next → Lesson 8 – Managing Includes and Imports</h2>
 <p>
-Now that you know how to control, group, and recover from task failures,  
-you’re ready to structure your playbooks for large-scale reuse using <b>includes</b> and <b>imports</b>.
+Next, we’ll explore <b>includes</b> and <b>imports</b> — tools that let you split, organize,  
+and reuse your playbooks efficiently as your automation grows.
 </p>
 
-<i>End of Lesson 7 notes (7.1–7.7)</i>
-
+<i>End of Lesson 7 notes (7.1–7.8)</i>
