@@ -1,0 +1,21 @@
+---
+  - name: Lesson 7 lab - Running Tasks Conditionally
+    hosts: all
+    gather_facts: true 
+
+    tasks: 
+      - name: Check for all disks on the node
+        ansible.builtin.command: lsblk -nd --output NAME
+        register: disk_list
+        changed_when: false
+
+
+      - name: Debug output of detected disks 
+        ansible.builtin.debug: 
+          msg: "You have a second disk" 
+        when: disk_list.stdout_lines | length > 1
+
+      - name: Say if there is no second disk 
+        ansible.builtin.debug: 
+          msg: "You have no second disk"
+        when: disk_list.stdout_lines | length == 1
