@@ -16,32 +16,20 @@
 <hr/>
 
 <h2>7.1 Understanding Conditionals</h2>
+<p>Task control in Ansible means deciding <b>when</b> a task runs, <b>how many times</b> it runs, and <b>whether</b> it should trigger another task. These tools make automation smarter and more efficient.</p>
 
-<p>
-Task control in Ansible means deciding <b>when</b> a task runs, <b>how many times</b> it runs,  
-and <b>whether</b> it should trigger another task. These tools make automation smarter and more efficient.
-</p>
-
-<h3>Conditionals Overview</h3>
 <ul>
-  <li><b>loop:</b> Repeat a task for multiple items.</li>
-  <li><b>when:</b> Run a task only if a condition is true.</li>
-  <li><b>handlers:</b> Run only when triggered by another task that made a change.</li>
+  <li><b>loop:</b> repeat tasks</li>
+  <li><b>when:</b> run tasks only if a condition is true</li>
+  <li><b>handlers:</b> run only when something changes</li>
 </ul>
 
-<p><b>Plain example:</b> “Do laundry for each shirt” (<code>loop</code>),  
-“only wear it if it’s cold” (<code>when</code>),  
-“wash again if you spill” (<code>handler</code>).</p>
+<p><b>Analogy:</b> “Do laundry for each shirt” (<code>loop</code>), “only wear it if it’s cold” (<code>when</code>), “wash again if you spill” (<code>handler</code>).</p>
 
 <hr/>
 
 <h2>7.2 Writing Loops</h2>
 
-<p>
-Loops keep playbooks clean and short — one task, many executions.
-</p>
-
-<h3>1️⃣ Basic Loop</h3>
 <pre><code>- name: Start some services
   service:
     name: "{{ item }}"
@@ -51,160 +39,59 @@ Loops keep playbooks clean and short — one task, many executions.
     - httpd
 </code></pre>
 
-<h3>2️⃣ Using Variables in Loops</h3>
+<p>Loops keep your playbooks short — one task can handle many items.</p>
+
 <pre><code>vars:
   my_services:
     - httpd
     - vsftpd
 tasks:
-  - name: Start some services
+  - name: Start services dynamically
     service:
       name: "{{ item }}"
       state: started
     loop: "{{ my_services }}"
 </code></pre>
 
-<h3>3️⃣ Using Dictionaries in Loops</h3>
-<pre><code>- name: Create users using a loop
-  hosts: all
-  tasks:
-    - name: Create users
-      user:
-        name: "{{ item.name }}"
-        state: present
-        groups: "{{ item.groups }}"
-      loop:
-        - { name: anna, groups: wheel }
-        - { name: linda, groups: users }
-        - { name: bob, groups: users }
-</code></pre>
-
-<p><b>Tip:</b> Each list item can hold multiple keys, making loops powerful for structured data.</p>
-
-<h3>4️⃣ loop vs with_items</h3>
-<ul>
-  <li><b>loop</b> → modern standard</li>
-  <li><b>with_items</b> → old syntax</li>
-  <li><b>loop</b> replaces all <code>with_*</code> forms</li>
-</ul>
-
 <hr/>
 
 <h2>7.3 Using When</h2>
 
-<p>
-The <b>when</b> keyword lets Ansible make choices:  
-“If this is true, do it — if not, skip it.”
-</p>
+<p><b>when</b> lets you make decisions. “If this is true, do it — otherwise skip.”</p>
 
-<h3>Example – Conditional Package Install</h3>
-<pre><code>- name: when demo
-  hosts: all
-  vars:
-    supported_distros:
-      - Ubuntu
-      - CentOS
-      - Fedora
-    mypackage: vim
-
-  tasks:
-    - name: Install package if OS is supported
-      yum:
-        name: "{{ mypackage }}"
-        state: present
-      when: ansible_distribution in supported_distros
+<pre><code>- name: Install package only if OS supported
+  yum:
+    name: vim
+    state: present
+  when: ansible_distribution in ['RedHat','CentOS','Fedora']
 </code></pre>
 
-<ul>
-  <li>Checks if the host OS is in the allowed list.</li>
-  <li>If true → installs. If false → skips cleanly.</li>
-</ul>
-
-<h3>Common When Conditions</h3>
-<pre><code>ansible_machine == "x86_64"
-ansible_distribution_version == "8"
-ansible_memfree_mb >= 1024
-my_variable is defined
-ansible_distribution in supported_distros
-</code></pre>
-
-<h3>Forcing Variable Types with Filters</h3>
-<pre><code>when: vgsize | int > 5
-when: runme | bool
-</code></pre>
-
-<ul>
-  <li><code>| int</code> → treat value as a number</li>
-  <li><code>| bool</code> → treat value as true/false</li>
-</ul>
-
-<p>
-Filters don’t change data; they only tell Ansible how to interpret it.
-</p>
-
-<hr/>
-
-<h3>Lab Summary</h3>
-<ul>
-  <li>Used <b>when</b> to run tasks conditionally.</li>
-  <li>Tested multiple fact-based rules (OS, memory, version).</li>
-  <li>Used filters to enforce correct data types.</li>
-</ul>
+<p><b>Tip:</b> Use filters like <code>| int</code> and <code>| bool</code> to make sure comparisons are accurate.</p>
 
 <hr/>
 
 <h2>7.4 Using When and Register Together</h2>
 
-<p>
-Now we combine <b>when</b> with <b>register</b> to make Ansible respond to real results.  
-<code>register</code> saves what a task found or changed — like saving a report card —  
-and <code>when</code> decides what to do with that info.
-</p>
-
-<h3>Example: Store and React</h3>
-<pre><code>- name: Create a user and store result
+<pre><code>- name: Create a user
   user:
-    name: "{{ username }}"
+    name: paul
   register: user_info
 
-- name: Show register results
+- name: Print results only if user changed
   debug:
-    var: user_info
-
-- name: Act only if user was changed
-  debug:
-    msg: "User {{ username }} was just created!"
+    msg: "User created!"
   when: user_info.changed
 </code></pre>
 
-<h3>Testing Multiple Conditions</h3>
-<pre><code>when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
-when: ansible_machine == "x86_64" and ansible_distribution == "CentOS"
-when:
-  - ansible_machine == "x86_64"
-  - ansible_memfree_mb > 512
-</code></pre>
+<p><b>register</b> stores results, and <b>when</b> acts on them — like saving a test score and deciding what to do next.</p>
 
 <hr/>
 
 <h2>7.5 Conditional Task Execution with Handlers</h2>
 
-<p>
-Handlers are special tasks that run <b>only</b> when something changes.  
-They’re triggered by the <code>notify</code> keyword —  
-for example, restarting a service after a new configuration file is copied.
-</p>
+<p>Handlers are special tasks triggered only when a change occurs. They’re perfect for restarts and reloads.</p>
 
-<h3>Understanding Handlers</h3>
-<ul>
-  <li>Handlers run only if the task before them caused a change.</li>
-  <li>This prevents unnecessary restarts or reboots.</li>
-  <li>The main task “calls” a handler using <code>notify</code>.</li>
-  <li>Handlers typically restart services, reload configs, or reboot systems.</li>
-</ul>
-
-<h3>Example – Restart Web Service After Config Change</h3>
-<pre><code>- name: Copy index.html
+<pre><code>- name: Copy config
   copy:
     src: /tmp/index.html
     dest: /var/www/html/index.html
@@ -218,184 +105,180 @@ handlers:
       state: restarted
 </code></pre>
 
-<hr/>
-
-<h3>Using Handlers More Efficiently</h3>
-<ul>
-  <li>Handlers normally execute <b>after all tasks</b> finish.</li>
-  <li>You can force them to run early using <code>meta: flush_handlers</code>.</li>
-  <li>If a task fails, handlers won’t run — unless you set <code>force_handlers: true</code>.</li>
-  <li>One task can trigger multiple handlers at once.</li>
-</ul>
-
-<hr/>
-
-<h3>Using ansible.builtin.meta Module</h3>
-<p>
-The <code>ansible.builtin.meta</code> module can adjust playbook flow —  
-trigger handlers now, clear data, or stop a specific host mid-play.
-</p>
-
-<ul>
-  <li><b>flush_handlers:</b> run all handlers immediately.</li>
-  <li><b>refresh_inventory:</b> recheck inventory facts right now.</li>
-  <li><b>clear_facts:</b> remove all gathered facts.</li>
-  <li><b>end_host:</b> stop running the play for this host.</li>
-</ul>
+<p><b>Tip:</b> Handlers run at the end, unless you force them early with <code>meta: flush_handlers</code>.</p>
 
 <hr/>
 
 <h2>7.6 Using Blocks</h2>
 
-<p>
-Blocks let you group related tasks and manage them together.  
-They make playbooks cleaner and more reliable, especially when you want to control error handling or apply conditions to several tasks at once.
-</p>
+<p>Blocks group related tasks together, making your playbooks cleaner and stronger against errors.</p>
 
-<h3>Understanding Blocks</h3>
-<ul>
-  <li>A <b>block</b> is a logical group of tasks.</li>
-  <li>It helps control how tasks execute together.</li>
-  <li>You can use a single <code>when</code> to apply to the entire block.</li>
-  <li>Note: <code>loop</code> can’t be used directly on blocks (only inside them).</li>
-</ul>
-
-<hr/>
-
-<h3>Using Blocks for Error Handling</h3>
-<p>
-Blocks shine when things go wrong.  
-They can define what happens on success, what to do if something fails,  
-and what to run every time, no matter what.
-</p>
-
-<pre><code>- name: Using blocks for error handling
-  hosts: all
-  tasks:
-    - name: Intended to be successful
-      block:
-        - name: Remove a file
-          shell:
-            cmd: rm /var/www/html/index.html
-      rescue:
-        - name: Create a rescue file if removal fails
-          shell:
-            cmd: touch /tmp/rescuefile
-      always:
-        - name: Always log completion
-          shell:
-            cmd: echo "Play completed" >> /tmp/play.log
+<pre><code>- name: Example with block, rescue, always
+  block:
+    - name: Remove file
+      shell: rm /var/www/html/index.html
+  rescue:
+    - name: Recover from error
+      shell: touch /tmp/rescuefile
+  always:
+    - name: Always log
+      shell: echo "Play done" >> /tmp/play.log
 </code></pre>
 
-<hr/>
-
-<h3>Lab Summary – Using Blocks</h3>
-<ul>
-  <li>Grouped related tasks into one logical structure.</li>
-  <li>Used <b>rescue</b> to handle errors automatically.</li>
-  <li>Used <b>always</b> for guaranteed cleanup or notifications.</li>
-</ul>
-
-<p><b>Key takeaway:</b> Blocks make playbooks tougher — they group logic, recover from errors, and stay clean and readable.</p>
+<p><b>block:</b> main tasks | <b>rescue:</b> backup plan | <b>always:</b> cleanup</p>
 
 <hr/>
 
 <h2>7.7 Managing Task Failure</h2>
 
-<p>
-Even the best automation fails sometimes — and knowing how to control what happens next is critical.  
-Ansible gives you tools to manage errors gracefully, keep plays running, and decide what counts as “failed.”
-</p>
+<p>Failure handling gives you control over how Ansible reacts when things go wrong.</p>
 
 <ul>
-  <li><b>ignore_errors:</b> continues even if a task fails.</li>
-  <li><b>force_handlers:</b> makes handlers run even after a failure.</li>
-  <li><b>failed_when:</b> defines what a “failure” really is.</li>
-  <li><b>fail:</b> stops the play on purpose with a clear message.</li>
+  <li><b>ignore_errors:</b> continue even if something fails</li>
+  <li><b>force_handlers:</b> still run handlers after errors</li>
+  <li><b>failed_when:</b> define what failure means</li>
+  <li><b>fail:</b> stop intentionally with a message</li>
 </ul>
 
 <hr/>
 
 <h2>7.8 Managing Task Failure (Advanced)</h2>
 
-<p>
-This section expands your control by teaching you how to handle and define task failures more precisely.  
-You’ll learn how to ignore specific errors, force certain tasks to still run, and create your own failure logic.
-</p>
+<p>Now you define your own failure logic for better reliability.</p>
 
-<h3>1️⃣ Understanding Failure Behavior</h3>
-<ul>
-  <li>Ansible checks the <b>exit code</b> of each task (0 = success, anything else = failure).</li>
-  <li>If a task fails, Ansible stops running tasks on that host — unless told otherwise.</li>
-  <li>Use <code>ignore_errors: yes</code> to keep going after a failure.</li>
-  <li>Use <code>force_handlers: true</code> to ensure handlers still run even if something failed earlier.</li>
-</ul>
-
-<h3>2️⃣ Defining Custom Failure Conditions</h3>
-<pre><code>- name: Detect custom failure
+<pre><code>- name: Define custom failure
   command: echo hello world
   ignore_errors: yes
   register: result
   failed_when: "'world' in result.stdout"
 </code></pre>
 
-<p>
-Here, even though <code>echo</code> normally succeeds, we define a rule:  
-if the word “world” appears in the output, treat it as a failure.
-</p>
-
-<h3>3️⃣ Using the Fail Module</h3>
-<pre><code>- name: Example using fail module
-  shell: echo "Checking something important"
-  register: result
-  ignore_errors: yes
-
-- name: Stop play if issue found
+<pre><code>- name: Stop play manually
   fail:
-    msg: "Custom failure triggered because output contained 'important'"
-  when: "'important' in result.stdout"
+    msg: "Critical issue found!"
+  when: "'Critical' in result.stdout"
 </code></pre>
 
-<ul>
-  <li><code>fail</code> stops the play with your custom message.</li>
-  <li>Use <code>ignore_errors: yes</code> on earlier tasks so you can analyze results before failing.</li>
-  <li>Use <code>failed_when</code> for subtle logic, <code>fail</code> for hard stops.</li>
-</ul>
-
-<h3>4️⃣ Plain-English Summary</h3>
-<ul>
-  <li><b>ignore_errors:</b> skip errors, keep moving.</li>
-  <li><b>force_handlers:</b> force handlers to run even after errors.</li>
-  <li><b>failed_when:</b> define your own “fail” logic.</li>
-  <li><b>fail:</b> stop play intentionally, clearly.</li>
-</ul>
-
-<p>
-<b>Analogy:</b> Think of Ansible like a factory line —  
-<code>ignore_errors</code> keeps the line moving,  
+<p><b>Analogy:</b> <code>ignore_errors</code> keeps driving on a flat tire,  
 <code>failed_when</code> spots hidden issues,  
-and <code>fail</code> is the emergency stop switch when you detect something critical.
-</p>
+<code>fail</code> is your emergency brake.</p>
 
 <hr/>
 
-<h3>Lab Summary – Managing Task Failure (Advanced)</h3>
+<h2>7.9 Including and Importing Files</h2>
+
+<p>As playbooks grow, you’ll want to organize them into smaller reusable pieces using <b>includes</b> and <b>imports</b>.</p>
+
+<h3>Understanding Inclusion</h3>
 <ul>
-  <li>Practiced using <code>ignore_errors</code> to bypass minor issues.</li>
-  <li>Used <code>force_handlers</code> to ensure cleanup still happens.</li>
-  <li>Defined and tested failure rules with <code>failed_when</code>.</li>
-  <li>Triggered manual stops with the <code>fail</code> module for control.</li>
+  <li><b>Include</b> and <b>Import</b> can apply to roles, plays, or tasks.</li>
+  <li><b>include</b> = <b>dynamic</b> → loaded when the playbook runs.</li>
+  <li><b>import</b> = <b>static</b> → loaded before the play starts.</li>
+  <li>Playbook imports must appear at the top using <code>import_playbook</code>.</li>
 </ul>
 
-<p><b>Key takeaway:</b> Mastering failure handling makes your automation resilient —  
-you decide what’s a problem, what isn’t, and how to recover cleanly every time.</p>
+<p><b>Analogy:</b> <code>include</code> is like plugging in a USB mid-run,  
+while <code>import</code> is like having it already connected before starting the car.</p>
 
 <hr/>
 
-<h2>Next → Lesson 8 – Managing Includes and Imports</h2>
+<h3>Including Task Files</h3>
+
+<p>A task file is just a list of tasks — you can attach it anywhere in a playbook.</p>
+
+<ul>
+  <li><code>import_tasks</code> → static inclusion (parsed at load time)</li>
+  <li><code>include_tasks</code> → dynamic inclusion (parsed during runtime)</li>
+</ul>
+
+<p>Dynamic includes have some limits:</p>
+<ul>
+  <li><code>ansible-playbook --list-tasks</code> won’t show them.</li>
+  <li><code>ansible-playbook --start-at-task</code> won’t work with them.</li>
+  <li>You can’t trigger a handler in an imported file from the main one.</li>
+</ul>
+
+<p><b>Best Practice:</b> Store task files in a dedicated folder like <code>tasks/</code> to keep everything clean and modular.</p>
+
+<hr/>
+
+<h3>Example – Using import_tasks vs include_tasks</h3>
+<pre><code>- name: Import static tasks
+  import_tasks: setup.yml
+
+- name: Include dynamic tasks
+  include_tasks: debug.yml
+  when: ansible_facts['os_family'] == "RedHat"
+</code></pre>
+
+<p><b>Summary:</b>
+<ul>
+  <li>Use <code>import_*</code> when the structure is fixed and predictable.</li>
+  <li>Use <code>include_*</code> when flexibility is needed at runtime.</li>
+</ul></p>
+
+<hr/>
+
+<h2>Lesson 7 Lab – Running Tasks Conditionally</h2>
+
 <p>
-Next, we’ll explore <b>includes</b> and <b>imports</b> — tools that let you split, organize,  
-and reuse your playbooks efficiently as your automation grows.
+<b>Goal:</b> Create a playbook that writes <i>“you have a second disk”</i> if a second disk is found,  
+or <i>“you have no second disk”</i> if only one disk exists.
 </p>
 
-<i>End of Lesson 7 notes (7.1–7.8)</i>
+<p align="center">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/lesson7_lab.png" width="850">
+</p>
+
+<h3>Example Solution</h3>
+<pre><code>- name: Lesson 7 Lab - Check for second disk
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Check number of disks
+      set_fact:
+        disk_count: "{{ ansible_devices | length }}"
+
+    - name: Print if second disk exists
+      debug:
+        msg: "You have a second disk."
+      when: disk_count > 1
+
+    - name: Print if no second disk exists
+      debug:
+        msg: "You have no second disk."
+      when: disk_count <= 1
+</code></pre>
+
+<h3>How It Works</h3>
+<ul>
+  <li><b>gather_facts:</b> collects hardware info, including disks.</li>
+  <li><b>ansible_devices:</b> is a built-in variable listing all detected disks (like sda, sdb, etc.).</li>
+  <li><b>set_fact:</b> counts the number of disks.</li>
+  <li><b>when:</b> decides which message to show.</li>
+</ul>
+
+<p><b>Analogy:</b> It’s like checking your garage —  
+if there’s more than one car, say “you’ve got a second one!”  
+If not, you confirm there’s only one parked.</p>
+
+<hr/>
+
+<h3>Lab Summary</h3>
+<ul>
+  <li>Used facts to detect system hardware.</li>
+  <li>Counted disks dynamically with <code>set_fact</code>.</li>
+  <li>Used conditional logic (<code>when</code>) to decide what to display.</li>
+</ul>
+
+<p><b>Key takeaway:</b> Conditional tasks turn playbooks into intelligent scripts that react to real system states.</p>
+
+<hr/>
+
+<h2>Next → Lesson 8 – Roles and Reusability</h2>
+<p>
+Now that you can organize, reuse, and conditionally execute tasks,  
+you’re ready to take the next step — using <b>roles</b> to structure automation for enterprise-scale projects.
+</p>
+
+<i>End of Lesson 7 notes (7.1–7.9 + Lab)</i>
