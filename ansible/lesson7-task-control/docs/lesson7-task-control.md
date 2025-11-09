@@ -177,78 +177,162 @@ and <code>when</code> decides what to do with that info.
   when: user_info.changed
 </code></pre>
 
-<p>
-Here’s what happens:
-</p>
-<ul>
-  <li>The first task creates a user and saves its result into <code>user_info</code>.</li>
-  <li>The second shows what Ansible captured (useful for learning).</li>
-  <li>The third runs <b>only</b> if the creation actually happened (<code>changed: true</code>).</li>
-</ul>
-
-<p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.4.PNG" width="850">
-</p>
-
-<hr/>
-
 <h3>Testing Multiple Conditions</h3>
-<p>
-You can combine several rules using <code>and</code>, <code>or</code>, or parentheses to group logic.
-</p>
-
 <pre><code>when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 when: ansible_machine == "x86_64" and ansible_distribution == "CentOS"
-</code></pre>
-
-<p>
-You can also stack multiple conditions in a list —  
-every line must be true for the task to run.
-</p>
-
-<pre><code>when:
+when:
   - ansible_machine == "x86_64"
   - ansible_memfree_mb > 512
 </code></pre>
 
-<p><b>Example in English:</b>  
-“If this host is 64-bit <i>and</i> has more than 512 MB free memory, then run this task.”</p>
+<hr/>
+
+<h2>7.5 Conditional Task Execution with Handlers</h2>
+
+<p>
+Handlers are special tasks that run <b>only</b> when something changes.  
+They’re triggered by the <code>notify</code> keyword —  
+for example, restarting a service after a new configuration file is copied.
+</p>
+
+<h3>Understanding Handlers</h3>
+<ul>
+  <li>Handlers run only if the task before them caused a change.</li>
+  <li>This prevents unnecessary restarts or reboots.</li>
+  <li>The main task “calls” a handler using <code>notify</code>.</li>
+  <li>Handlers typically restart services, reload configs, or reboot systems.</li>
+</ul>
+
+<h3>Example – Restart Web Service After Config Change</h3>
+<pre><code>- name: Copy index.html
+  copy:
+    src: /tmp/index.html
+    dest: /var/www/html/index.html
+  notify:
+    - restart_web
+
+handlers:
+  - name: restart_web
+    service:
+      name: httpd
+      state: restarted
+</code></pre>
+
+<hr/>
+
+<h3>Using Handlers More Efficiently</h3>
+<ul>
+  <li>Handlers normally execute <b>after all tasks</b> finish.</li>
+  <li>You can force them to run early using <code>meta: flush_handlers</code>.</li>
+  <li>If a task fails, handlers won’t run — unless you set <code>force_handlers: true</code>.</li>
+  <li>One task can trigger multiple handlers at once.</li>
+</ul>
+
+<hr/>
+
+<h3>Using ansible.builtin.meta Module</h3>
+<p>
+The <code>ansible.builtin.meta</code> module can adjust playbook flow —  
+trigger handlers now, clear data, or stop a specific host mid-play.
+</p>
+
+<ul>
+  <li><b>flush_handlers:</b> run all handlers immediately.</li>
+  <li><b>refresh_inventory:</b> recheck inventory facts right now.</li>
+  <li><b>clear_facts:</b> remove all gathered facts.</li>
+  <li><b>end_host:</b> stop running the play for this host.</li>
+</ul>
+
+<hr/>
+
+<h2>7.6 Using Blocks</h2>
+
+<p>
+Blocks let you group related tasks and manage them together.  
+They make playbooks cleaner and more reliable, especially when you want to control error handling or apply conditions to several tasks at once.
+</p>
+
+<h3>Understanding Blocks</h3>
+<ul>
+  <li>A <b>block</b> is a logical group of tasks.</li>
+  <li>It helps control how tasks execute together.</li>
+  <li>You can use a single <code>when</code> to apply to the entire block.</li>
+  <li>Note: <code>loop</code> can’t be used directly on blocks (only inside them).</li>
+</ul>
 
 <p align="center">
-  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.4p1.PNG" width="850">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.6.PNG" width="850">
+</p>
+
+<hr/>
+
+<h3>Using Blocks for Error Handling</h3>
+<p>
+Blocks shine when things go wrong.  
+They can define what happens on success, what to do if something fails,  
+and what to run every time, no matter what.
+</p>
+
+<pre><code>- name: Using blocks for error handling
+  hosts: all
+  tasks:
+    - name: Intended to be successful
+      block:
+        - name: Remove a file
+          shell:
+            cmd: rm /var/www/html/index.html
+      rescue:
+        - name: Create a rescue file if removal fails
+          shell:
+            cmd: touch /tmp/rescuefile
+      always:
+        - name: Always log completion
+          shell:
+            cmd: echo "Play completed" >> /tmp/play.log
+</code></pre>
+
+<ul>
+  <li><b>block:</b> Main tasks you want to run.</li>
+  <li><b>rescue:</b> Backup plan if something fails.</li>
+  <li><b>always:</b> Cleanup or final steps that always run.</li>
+</ul>
+
+<p align="center">
+  <img src="https://github.com/ITPAUL123184LINUX/infra-labs/blob/main/ansible/lesson7-task-control/docs/img/7.6p1.PNG" width="850">
 </p>
 
 <hr/>
 
 <h3>Plain-English Summary</h3>
 <ul>
-  <li><b>register</b> stores the outcome of a task (success, fail, changed, etc.).</li>
-  <li><b>when</b> reads that outcome to decide what happens next.</li>
-  <li>You can combine facts, variables, and results using <code>and</code>/<code>or</code>.</li>
-  <li>Use <code>debug:</code> to explore what’s inside a registered variable.</li>
+  <li><b>block:</b> Main section to execute.</li>
+  <li><b>rescue:</b> What to do if the block fails.</li>
+  <li><b>always:</b> Always runs — success or fail.</li>
+  <li>One <code>when</code> can control all tasks in a block.</li>
 </ul>
 
-<p><b>Analogy:</b> Think of <b>register</b> as saving the test score,  
-and <b>when</b> as deciding whether you passed or need to study more.</p>
+<p><b>Analogy:</b> Cooking dinner:  
+<b>block</b> is the meal plan,  
+<b>rescue</b> is ordering pizza if you burn it,  
+and <b>always</b> is cleaning up afterward no matter what.</p>
 
 <hr/>
 
-<h3>Lab Summary – Using When + Register</h3>
+<h3>Lab Summary – Using Blocks</h3>
 <ul>
-  <li>Used <b>register</b> to capture results of a task.</li>
-  <li>Used <b>when</b> to run follow-up tasks only when specific results occurred.</li>
-  <li>Tested multiple conditions using <b>and</b>/<b>or</b> and lists.</li>
+  <li>Grouped related tasks into one logical structure.</li>
+  <li>Used <b>rescue</b> to handle errors automatically.</li>
+  <li>Used <b>always</b> for guaranteed cleanup or notifications.</li>
 </ul>
 
-<p><b>Key takeaway:</b> Together, <code>when</code> + <code>register</code> give Ansible decision-making power.  
-It can now “see,” “remember,” and “act” — just like a human operator.</p>
+<p><b>Key takeaway:</b> Blocks make playbooks tougher — they group logic, recover from errors, and stay clean and readable.</p>
 
 <hr/>
 
-<h2>Next → 7.5 Handlers and Notify</h2>
+<h2>Next → 7.7 Combining Task Control Tools</h2>
 <p>
-Next, we’ll dive into <b>handlers</b> — tasks that run automatically when something changes,  
-like restarting a service only after configuration updates.
+Next, we’ll combine <b>loop</b>, <b>when</b>, <b>register</b>, <b>handlers</b>, and <b>blocks</b>  
+to create adaptive, error-resistant, and efficient playbooks.
 </p>
 
-<i>End of sections 7.1–7.4 notes</i>
+<i>End of sections 7.1–7.6 notes</i>
