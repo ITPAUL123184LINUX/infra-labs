@@ -1,0 +1,9 @@
+---
+  - name: Lesson 8 lab - Apply hostname template 
+    hosts: all
+    become: true 
+    tasks: 
+      - name: Apply template to /etc/hostname
+        ansible.builtin.template: 
+          src: ../templates/hostname.j2
+          dest: /etc/hostname 

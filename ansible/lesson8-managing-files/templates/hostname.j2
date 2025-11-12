@@ -1,0 +1,5 @@
+{% if inventory_hostname %}
+HOSTNAME={{ inventory_hostname }}
+{% else %}
+HOSTNAME=unknown
+{% endif %}
