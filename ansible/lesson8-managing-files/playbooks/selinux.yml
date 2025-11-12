@@ -1,18 +1,24 @@
 ---
-- name: show selinux
+- name: Show SELinux
   hosts: all
+  become: true
+
   tasks:
-    # - name: install required pacakges
-    #yum:
-    # name: policycoreutils-python-utils
-    # state: present
-  - name: set selinux context
-    sefcontext:
-      target: /tmp/removeme
-      setype: public_content_rw_t 
-      state: present
-    notify:
-      - run restorecon
+    - name: Install required packages
+      ansible.builtin.yum:
+        name: policycoreutils-python-utils
+        state: present
+
+    - name: Set SELinux context
+      sefcontext:
+        target: /tmp/removeme
+        setype: public_content_rw_t
+        state: present
+      notify:
+        - Run restorecon
+
   handlers:
-  - name: run restorecon
-    command: restorecon -v /tmp/removeme    
+    - name: Run restorecon
+      ansible.builtin.command:
+        cmd: restorecon -v /tmp/removeme
+
