@@ -172,3 +172,158 @@ Roles make Ansible scalable. They enforce structure, encourage reusability, and 
 <p>
 In the next section, we’ll explore how <strong>role dependencies, variables, and defaults</strong> interact — and how to structure advanced playbooks that seamlessly integrate multiple roles into a single automated workflow.
 </p>
+
+<hr>
+<h1 align="center">Lesson 9 Continued: Using Galaxy Roles</h1>
+
+<p>
+Community roles expand Ansible’s power by allowing engineers to use prebuilt automation shared by the global community. These roles are hosted on <a href="https://galaxy.ansible.com">Ansible Galaxy</a> and can be easily searched, installed, and integrated into your environment.
+</p>
+
+<h2>Installing Galaxy Roles</h2>
+
+<p>
+To install a community role from Ansible Galaxy, use:
+</p>
+
+<pre><code class="language-bash">
+ansible-galaxy role install geerlingguy.apache
+</code></pre>
+
+<p>
+This command downloads the specified role and places it in your local <code>roles_path</code>. The <strong>roles_path</strong> defines where Ansible looks for roles. The default search order is:
+</p>
+
+<ul>
+  <li><code>roles/</code> directory in the current project</li>
+  <li><code>~/.ansible/roles/</code></li>
+  <li><code>/etc/ansible/roles/</code></li>
+  <li><code>/usr/share/ansible/roles/</code></li>
+</ul>
+
+<p>
+You can install a role in a custom location using the <code>-p</code> flag:
+</p>
+
+<pre><code class="language-bash">
+ansible-galaxy role install -p ./custom_roles geerlingguy.apache
+</code></pre>
+
+<p>
+This flexibility allows teams to organize roles per project or environment while maintaining a consistent search order.
+</p>
+
+<hr>
+
+<h2>Using the ansible-galaxy Command</h2>
+
+<p>
+The <code>ansible-galaxy</code> command provides several key functions for managing roles. Below are common examples:
+</p>
+
+<pre><code class="language-bash">
+# Search for roles related to Docker by author geerlingguy for RHEL
+ansible-galaxy role search 'docker' --author geerlingguy --platforms EL
+
+# Get detailed info about a role
+ansible-galaxy role info geerlingguy.docker
+
+# List all installed roles
+ansible-galaxy role list
+
+# Remove a role
+ansible-galaxy role remove geerlingguy.docker
+</code></pre>
+
+<p>
+These commands streamline discovery, management, and cleanup of roles in your automation environment. They are especially useful when auditing what’s currently deployed or verifying version compatibility across multiple systems.
+</p>
+
+<hr>
+
+<h2>Using a Requirements File</h2>
+
+<p>
+When your project depends on multiple roles, manually installing each one becomes inefficient. Instead, define all dependencies inside a <code>roles/requirements.yml</code> file. This creates a single source of truth for managing project-level role dependencies.
+</p>
+
+<pre><code class="language-yaml">
+# roles/requirements.yml
+- src: https://github.com/mygit/myrole
+  scm: git
+- src: file:///tmp/myrole.tar
+- src: https://www.example.local/myrole.tar
+</code></pre>
+
+<p>
+You can install all roles listed in the requirements file with one command:
+</p>
+
+<pre><code class="language-bash">
+ansible-galaxy role install -r roles/requirements.yml
+</code></pre>
+
+<p>
+This ensures consistency across environments — every team member or build pipeline installs the same versions from the same sources. It’s also ideal for CI/CD automation and reproducible infrastructure setups.
+</p>
+
+<h2>Sample Requirements File</h2>
+
+<pre><code class="language-yaml">
+- src: https://github.com/myaccount/myrole.role
+  scm: git
+  version: "2.0"
+- src: file:///tmp/myrole.tar
+  name: mytarrole
+- src: https://example.local/myrole.tar
+  name: mywebrole
+</code></pre>
+
+<p>
+Roles can be sourced from Git, files, or web URLs. When hosted in Git, the <code>scm: git</code> key is required to specify the source control mechanism.
+</p>
+
+<hr>
+
+<h2>Practical Use Case</h2>
+
+<p>
+Consider a scenario where your team manages both web and database servers. Instead of creating all automation from scratch, you can pull stable, community-tested roles for Apache and PostgreSQL, then extend them with custom logic in your own local roles.
+</p>
+
+<pre><code class="language-yaml">
+- name: Deploy web and database stack
+  hosts: all
+  become: yes
+  roles:
+    - geerlingguy.apache
+    - geerlingguy.postgresql
+    - custom.firewall
+</code></pre>
+
+<p>
+This hybrid approach leverages both community expertise and your organization’s specific compliance requirements.
+</p>
+
+<hr>
+
+<h2>Best Practices</h2>
+
+<ul>
+  <li>Pin versions in <code>requirements.yml</code> for deterministic builds.</li>
+  <li>Keep community roles separate from custom roles to avoid accidental overwrites.</li>
+  <li>Review and audit community roles before production use for security and compliance.</li>
+  <li>Document role usage, purpose, and required variables in each project’s README.</li>
+</ul>
+
+<hr>
+
+<h2>Summary</h2>
+
+<p>
+Using Galaxy roles and the <code>ansible-galaxy</code> command unlocks collaboration and standardization across teams. Combined with <code>requirements.yml</code>, this approach enforces consistency, speeds up onboarding, and keeps automation modular and clean.
+</p>
+
+<p>
+Next, we’ll dive into how to <strong>build role dependencies, integrate roles with collections, and automate role testing</strong> — skills that demonstrate advanced Ansible maturity and are crucial for real-world production automation.
+</p>
