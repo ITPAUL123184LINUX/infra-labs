@@ -327,3 +327,157 @@ Using Galaxy roles and the <code>ansible-galaxy</code> command unlocks collabora
 <p>
 Next, we’ll dive into how to <strong>build role dependencies, integrate roles with collections, and automate role testing</strong> — skills that demonstrate advanced Ansible maturity and are crucial for real-world production automation.
 </p>
+
+<hr>
+<h1 align="center">Lesson 9 Continued: Creating Custom Roles</h1>
+
+<p>
+Beyond community roles, many organizations require <strong>custom roles</strong> to meet internal standards or environment-specific configurations. Custom roles let you define automation logic tailored to your exact infrastructure, security, and compliance needs.
+</p>
+
+<h2>Creating a Custom Role</h2>
+
+<p>
+To create a new role manually, ensure it resides within your <code>roles_path</code> — this is where Ansible searches for role definitions. You can verify or modify this path inside <code>ansible.cfg</code>.
+</p>
+
+<p>
+To automatically generate the required role structure, use:
+</p>
+
+<pre><code class="language-bash">
+ansible-galaxy role init myrole
+</code></pre>
+
+<p>
+This command creates the default folder hierarchy for <code>myrole</code> inside the current <code>roles_path</code>. Once created, complete the <code>tasks/main.yml</code> file and other directories as needed.
+</p>
+
+<pre><code class="language-yaml">
+# roles/myrole/tasks/main.yml
+- name: Example custom task
+  ansible.builtin.debug:
+    msg: "My custom role is working!"
+</code></pre>
+
+<p>
+Custom roles follow the same structure and execution model as community roles, making them easy to integrate with existing playbooks.
+</p>
+
+<hr>
+
+<h1 align="center">Lesson 9 Continued: Installing RHEL System Roles</h1>
+
+<p>
+Red Hat Enterprise Linux includes a powerful suite of prebuilt automation content called <strong>RHEL System Roles</strong>. These roles standardize configuration management across RHEL versions and simplify administration tasks such as networking, storage, time synchronization, and security.
+</p>
+
+<h2>Installing RHEL System Roles</h2>
+
+<ul>
+  <li>For Red Hat customers, the roles are distributed as the <strong>redhat.rhel_system_roles</strong> collection.</li>
+  <li>For Ansible Core users, they’re available via the <code>rhel-system-roles</code> RPM package.</li>
+</ul>
+
+<pre><code class="language-bash">
+sudo dnf install -y rhel-system-roles
+</code></pre>
+
+<p>
+Installing this package places roles under:
+</p>
+
+<ul>
+  <li><code>/usr/share/ansible/roles/</code></li>
+  <li><code>/usr/share/ansible/collections/</code></li>
+</ul>
+
+<p>
+This ensures easy access via both <code>ansible-playbook</code> and <code>ansible-navigator</code>.  
+The package also installs examples under <code>/usr/share/doc/rhel-system-roles/</code> — a great resource for learning or adapting configurations quickly.
+</p>
+
+<p><strong>Tip:</strong> Best practice is to install using <code>dnf install rhel-system-roles</code> to ensure dependencies and documentation are properly placed.</p>
+
+<hr>
+
+<h2>Understanding RHEL System Roles</h2>
+
+<p>
+RHEL System Roles provide a unified interface to manage configuration parameters across different Red Hat versions. They help maintain consistent configurations, even as system defaults evolve between RHEL 7, 8, and 9.
+</p>
+
+<pre><code class="language-bash">
+sudo dnf install -y rhel-system-roles
+</code></pre>
+
+<p>
+Once installed, explore available roles:
+</p>
+
+<pre><code class="language-bash">
+ls /usr/share/ansible/roles/rhel-system-roles.*
+</code></pre>
+
+<p>
+Example directories include:
+<ul>
+  <li><code>rhel-system-roles.network</code></li>
+  <li><code>rhel-system-roles.timesync</code></li>
+  <li><code>rhel-system-roles.selinux</code></li>
+</ul>
+</p>
+
+<p>
+Each role includes sample playbooks under <code>/usr/share/doc/rhel-system-roles/</code>, providing a quick start for automation.
+</p>
+
+<hr>
+
+<h2>Example: Using a RHEL System Role</h2>
+
+<p>
+Here’s how to apply the <strong>timesync</strong> role to configure NTP across managed hosts:
+</p>
+
+<pre><code class="language-yaml">
+- name: Configure NTP using RHEL system role
+  hosts: all
+  become: yes
+  roles:
+    - rhel-system-roles.timesync
+</code></pre>
+
+<p>
+Variables such as <code>timesync_ntp_servers</code> can be set in your playbook or inventory to define preferred time sources.
+</p>
+
+<hr>
+
+<h2>Exam Tip</h2>
+
+<p>
+If you encounter RHEL System Roles during certification exams (like RHCE), you can copy a sample playbook directly from:
+</p>
+
+<pre><code class="language-bash">
+/usr/share/doc/rhel-system-roles/
+</code></pre>
+
+<p>
+Then, adapt it to your needs rather than building one from scratch. This saves time and ensures accuracy under exam conditions.
+</p>
+
+<hr>
+
+<h2>Summary</h2>
+
+<p>
+RHEL System Roles bridge the gap between manual configuration and enterprise automation. They simplify complex tasks and ensure that automation scripts remain compatible across RHEL versions. Combined with custom roles, they empower system administrators to manage configurations efficiently, consistently, and at scale.
+</p>
+
+<p>
+In the next section, we’ll explore <strong>Role Dependencies, Collections, and Testing Roles</strong> to finalize our understanding of modular, production-ready Ansible automation.
+</p>
+
+
