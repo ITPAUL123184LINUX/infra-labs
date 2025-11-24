@@ -480,4 +480,58 @@ RHEL System Roles bridge the gap between manual configuration and enterprise aut
 In the next section, we’ll explore <strong>Role Dependencies, Collections, and Testing Roles</strong> to finalize our understanding of modular, production-ready Ansible automation.
 </p>
 
+<hr>
+<h1 align="center">Lesson 9 Continued: Configuring Role and Collection Sources</h1>
+
+<p>
+By default, the <code>ansible-galaxy</code> command fetches roles and collections from <a href="https://galaxy.ansible.com">galaxy.ansible.com</a>.  
+In enterprise environments, you often need to pull content from multiple sources such as Red Hat Automation Hub, an internal Galaxy server, or the public Galaxy. These sources and their priorities are configured in <code>ansible.cfg</code>.
+</p>
+
+<h2>Configuring Galaxy Sources in ansible.cfg</h2>
+
+<pre><code>
+[galaxy]
+server_list = automation_hub, galaxy
+
+[galaxy_server.automation_hub]
+url=https://console.redhat.com/ansible/automation-hub/
+auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+token=YOUR_LONG_TOKEN_VALUE
+
+[galaxy_server.galaxy]
+url=https://galaxy.ansible.com
+</code></pre>
+
+<p>
+Key points:
+</p>
+<ul>
+  <li><code>server_list</code> sets the lookup order; here Automation Hub is preferred over public Galaxy.</li>
+  <li>Each <code>[galaxy_server.&lt;name&gt;]</code> block defines a source URL and authentication method.</li>
+  <li>Automation Hub access typically uses an <strong>authentication token</strong> generated from the Red Hat console.</li>
+  <li>As an alternative, username/password can be used for some servers, but tokens are recommended.</li>
+</ul>
+
+<hr>
+<h2>Storing the Token as an Environment Variable</h2>
+
+<p>
+To avoid exposing secrets directly in <code>ansible.cfg</code>, you can move the token to an environment variable:
+</p>
+
+<pre><code class="language-bash">
+export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN='YOUR_LONG_TOKEN_VALUE'
+</code></pre>
+
+<p>
+After setting this variable, remove the <code>token=</code> line from <code>ansible.cfg</code>. Ansible will read the token from the environment at runtime, improving security and making it easier to manage credentials across different shells, CI pipelines, and jump hosts.
+</p>
+
+<p>
+Using properly configured Galaxy and Automation Hub sources ensures your roles and collections come from approved locations in a predictable order — a critical requirement for secure, repeatable automation in production.
+</p>
+
+
+
 
