@@ -532,6 +532,124 @@ After setting this variable, remove the <code>token=</code> line from <code>ansi
 Using properly configured Galaxy and Automation Hub sources ensures your roles and collections come from approved locations in a predictable order — a critical requirement for secure, repeatable automation in production.
 </p>
 
+<hr>
+<h1 align="center">Lesson 9 Continued: Troubleshooting, Logging & Navigator Artifacts</h1>
+
+<h2>Troubleshooting Without Logs</h2>
+
+<p>
+Most Ansible troubleshooting starts directly with STDOUT. By default, both <code>ansible-playbook</code> and <code>ansible-navigator</code> print all meaningful information to the screen.  
+When diagnosing issues:
+</p>
+
+<ul>
+  <li>Read the <strong>PLAY RECAP</strong> section first.</li>
+  <li>If something failed, scroll upward to find the first red failure message.</li>
+  <li>With <code>ansible-navigator</code>, use <code>-m stdout</code> for simplified text output.</li>
+</ul>
+
+<p>
+To increase verbosity and reveal deeper engine-level details, add one to four <code>-v</code> options:
+</p>
+
+<pre><code class="language-bash">
+ansible-playbook -vvv myplay.yml
+</code></pre>
+
+<p>
+Higher verbosity shows variable evaluation, module calls, SSH interactions, and task-level behavior — critical when debugging complex roles or collections.
+</p>
+
+<hr>
+
+<h2>Understanding Logging</h2>
+
+<p>
+Ansible does not write logs automatically — everything goes to STDOUT unless you configure otherwise.
+</p>
+
+<p>
+To enable file logging, use the <code>log_path</code> setting inside <code>ansible.cfg</code>:
+</p>
+
+<pre><code>
+[defaults]
+log_path = ./logs/ansible.log
+</code></pre>
+
+<ul>
+  <li>Use a directory your user can write to — <strong>avoid</strong> logging directly to <code>/var/log</code> unless using sudo.</li>
+</ul>
+
+<p>
+Additionally, <strong>ansible-navigator</strong> creates structured artifact files for every run.  
+These artifacts contain:
+</p>
+
+<ul>
+  <li>Task output</li>
+  <li>Executed playbook details</li>
+  <li>Module arguments</li>
+  <li>Environment information</li>
+  <li>Potentially sensitive data</li>
+</ul>
+
+<p>
+Artifacts are stored in the project directory where the playbook was executed.
+</p>
+
+<hr>
+
+<h2>Managing ansible-navigator Artifacts</h2>
+
+<p>
+Because an artifact file is generated for each run, repeated executions can quickly fill a directory.  
+Artifacts also store all task inputs/outputs — useful for debugging, but also something you must manage carefully in production.
+</p>
+
+<p>
+To disable artifact creation globally, configure <code>ansible-navigator.yml</code>:
+</p>
+
+<pre><code class="language-yaml">
+ansible-navigator:
+  playbook-artifact:
+    enable: false
+</code></pre>
+
+<p>
+This stops navigator from creating large collections of JSON artifacts while still allowing normal execution and stdout display.
+</p>
+
+<hr>
+
+<h2>Practical Troubleshooting Workflow</h2>
+
+<ol>
+  <li>Run with default verbosity.</li>
+  <li>Check PLAY RECAP.</li>
+  <li>Scroll upward for the first <code>FAILED!</code> message.</li>
+  <li>Re-run with <code>-vvv</code> for deeper detail.</li>
+  <li>Use <code>ansible-navigator -m stdout run play.yml</code> for raw text output.</li>
+  <li>Review navigator artifacts (if enabled) for structured debugging.</li>
+</ol>
+
+<p>
+This approach mirrors what senior engineers do in production: minimize noise first, then expand detail only when needed.
+</p>
+
+<hr>
+
+<h2>Summary</h2>
+
+<p>
+Troubleshooting in Ansible centers on STDOUT, smart use of verbosity flags, and optional navigator artifacts.  
+Logging can be enabled through <code>ansible.cfg</code> via <code>log_path</code>, while navigator artifacts provide deep forensic visibility into each playbook run.  
+Together, these tools give you a complete picture of Ansible behavior — essential for debugging roles, collections, and large automation workflows.
+</p>
+
+
+
 
 
 
