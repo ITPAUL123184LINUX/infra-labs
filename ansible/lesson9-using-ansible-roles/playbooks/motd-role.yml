@@ -1,0 +1,13 @@
+---
+- name: run a task before a role
+  vars:
+    system_manager: Paul 
+  hosts: all
+  pre_tasks:
+    - name: update yum cache
+      yum:
+        update_cache: yes
+  roles:
+    - motd
+
+

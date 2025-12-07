@@ -1,0 +1,49 @@
+---
+- name: Manage SELinux policy example
+  hosts: all
+  vars:
+    # Use "targeted" SELinux policy type
+    selinux_policy: targeted
+    # Set "enforcing" mode
+    selinux_state: enforcing
+    # Switch some SELinux booleans
+    # Map '/tmp/test_dir' and its subdirectories to the 'user_home_dir_t'
+    # SELinux file type
+    selinux_fcontexts:
+      - target: '/web(/.*)?'
+        setype: 'httpd_sys_content_t'
+        ftype: d
+        state: present
+    # Restore SELinux file contexts in '/tmp/test_dir'
+    selinux_restore_dirs:
+      - /web
+  tasks:
+    - name: Creates directory
+      file:
+        path: /web
+        state: directory
+        mode: "0755"
+
+    - name: Execute the role and reboot in a rescue block
+      block:
+        - name: Include selinux role
+          include_role:
+            name: rhel-system-roles.selinux
+      rescue:
+        - name: >-
+            Fail if failed for a different reason than selinux_reboot_required
+          fail:
+            msg: "role failed"
+          when: not selinux_reboot_required
+
+        - name: Restart managed host
+          reboot:
+
+        - name: Wait for managed host to come back
+          wait_for_connection:
+            delay: 10
+            timeout: 300
+
+        - name: Reapply the role
+          include_role:
+            name: rhel-system-roles.selinux

@@ -1,0 +1,6 @@
+- name: Configure /etc/issue
+  become: true
+  ansible.builtin.template:
+    src: issue.j2
+    dest: /etc/issue
+    mode: '0644'
